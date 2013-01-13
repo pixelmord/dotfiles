@@ -12,3 +12,20 @@ Thumbs.db
 # Files that might appear on external disks
 .Spotlight-V100
 .Trashes
+
+# IDE meta data
+.settings
+.project
+.buildpath
+.idea
+
+# cache files
+.sass-cache
+
+# DRUPAL Ignore configuration files that may contain sensitive information.
+sites/*/settings*.php
+
+# DRUPAL Ignore paths that contain user-generated content.
+sites/*/files
+sites/*/private
+sites/*.local
