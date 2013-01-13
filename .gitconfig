@@ -1,3 +1,6 @@
+[user]
+	name = Andreas Sahle
+	email = as@wunderkraut.com
 [alias]
 	c = commit -am
 	up = pull
