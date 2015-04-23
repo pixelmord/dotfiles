@@ -19,6 +19,9 @@ Thumbs.db
 .buildpath
 .idea
 
+# vagrant
+.vagrant
+
 # cache files
 .sass-cache
 
@@ -29,3 +32,4 @@ sites/*/settings*.php
 sites/*/files
 sites/*/private
 sites/*.local
+sites/*.dev

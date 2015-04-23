@@ -1,21 +1,21 @@
 [user]
 	name = Andreas Sahle
-	email = as@wunderkraut.com
+	email = andreas.sahle@wunderkraut.com
 [alias]
 	c = commit -am
-	up = pull
+	up = !sh -c \"git pull $@ && git submodule update --init --recursive\"
 	p = push
 	s = status -s
 	df = diff --color --color-words --abbrev
-	lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --
+	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
 [color]
-	ui = always
+	ui = true
 [apply]
 	whitespace = fix
 [core]
 	excludesfile = ~/.gitignore
 	attributesfile = ~/.gitattributes
-	whitespace = fix,space-before-tab,tab-in-indent,trailing-space
+	filemode = false
 [color "branch"]
 	current = yellow reverse
 	local = yellow
@@ -50,3 +50,5 @@
 # http://rentzsch.tumblr.com/post/564806957/public-but-hackable-git-submodules
 [url "git@github.com:pixelmord/"]
   insteadOf = "git://github.com/pixelmord/"
+[mergetool]
+	keepBackup = true
