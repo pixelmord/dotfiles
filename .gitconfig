@@ -31,6 +31,7 @@
 	untracked = cyan
 [merge]
 	log = true
+	tool = Kaleidoscope
 [push]
 	default = simple
 [url "git@github.com:"]
@@ -52,3 +53,13 @@
   insteadOf = "git://github.com/pixelmord/"
 [mergetool]
 	keepBackup = true
+	prompt = false
+[mergetool "Kaleidoscope"]
+	cmd = ksdiff --merge --output \"$MERGED\" --base \"$BASE\" -- \"$LOCAL\" --snapshot \"$REMOTE\" --snapshot
+	trustexitcode = true
+[difftool "Kaleidoscope"]
+	cmd = ksdiff --partial-changeset --relative-path \"$MERGED\" -- \"$LOCAL\" \"$REMOTE\"
+[difftool]
+	prompt = false
+[diff]
+	tool = Kaleidoscope

@@ -20,17 +20,17 @@ function server() {
 }
 
 # git log with per-commit cmd-clickable GitHub URLs (iTerm)
-function gf() {
-  local remote="$(git remote -v | awk '/^origin.*\(push\)$/ {print $2}')"
-  [[ "$remote" ]] || return
-  local user_repo="$(echo "$remote" | perl -pe 's/.*://;s/\.git$//')"
-  git log $* --name-status --color | awk "$(cat <<AWK
-    /^.*commit [0-9a-f]{40}/ {sha=substr(\$2,1,7)}
-    /^[MA]\t/ {printf "%s\thttps://github.com/$user_repo/blob/%s/%s\n", \$1, sha, \$2; next}
-    /.*/ {print \$0}
-AWK
-  )" | less -F
-}
+# function gf() {
+#   local remote="$(git remote -v | awk '/^origin.*\(push\)$/ {print $2}')"
+#   [[ "$remote" ]] || return
+#   local user_repo="$(echo "$remote" | perl -pe 's/.*://;s/\.git$//')"
+#   git log $* --name-status --color | awk "$(cat <<AWK
+#     /^.*commit [0-9a-f]{40}/ {sha=substr(\$2,1,7)}
+#     /^[MA]\t/ {printf "%s\thttps://github.com/$user_repo/blob/%s/%s\n", \$1, sha, \$2; next}
+#     /.*/ {print \$0}
+# AWK
+#   )" | less -F
+# }
 
 
 # Copy w/ progress
@@ -57,8 +57,8 @@ function json() {
 }
 
 # prune a set of empty directories
-function prunedir () { 
-   find $* -type d -empty -print0 | xargs -0r rmdir -p ; 
+function prunedir () {
+   find $* -type d -empty -print0 | xargs -0r rmdir -p ;
 }
 
 # take this repo and copy it to somewhere else minus the .git stuff.
@@ -100,7 +100,7 @@ function browsers(){
 	chrome $1
 	opera $1
 	firefox $1
-	safari $1	
+	safari $1
 }
 
 # Browserstack shortcuts, now with added hotness thanks to the Browserstack team.
@@ -110,7 +110,7 @@ function browsers(){
 # For local server running on port 3000, use like this
 # Usage: ipad3 "http://localhost:3000" "localhost,3000,0", win7ie8 "http://localhost:3000" "localhost,3000,0" etc.
 
-# For local server running on apache with ssl as staging.example.com and https://staging.example.com 
+# For local server running on apache with ssl as staging.example.com and https://staging.example.com
 # Usage: ipad3 "http://staging.example.com" "staging.example.com,80,0,staging.example.com,443,1", win7ie8 "http://staging.example.com" "staging.example.com,80,0,staging.example.com,443,1" etc.
 
 function openurl(){
