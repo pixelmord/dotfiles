@@ -7,10 +7,6 @@ done
 unset file
 
 # Load RVM into a shell session *as a function*
-export NVM_DIR="/Users/andi/.nvm"
-[ -s $HOME/.nvm/nvm.sh ] && . $HOME/.nvm/nvm.sh # This loads NVM
-
-
 [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
 
 # init z   https://github.com/rupa/z

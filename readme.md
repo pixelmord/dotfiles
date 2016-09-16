@@ -1,19 +1,13 @@
-# Pixelmords's dotfiles.
+# Pixelmord's dotfiles.
 
 This repo contains my personal dotfiles and are heavily based on [paul](https://github.com/paulirish/dotfiles/), [mathias](https://github.com/mathiasbynens/dotfiles/) and [addy](http://github.com/addyosmani/dotfiles)'s.
 
-##  Addy's additions
-
-* Browserstack shortcuts which will launch the service and automatically load up a specific OS/Browser pair with your URL. e.g `win7ie8 "http://google.com"`, `ipad3 "http://google.com"`, `ipad3ios6 "http://google.com"`,`androidnexus "http://google.com"` etc. If you would prefer to work locally similarly use `ipad3 "http://localhost:3000"`
-* Dropbox via the command-line support `dropbox upload {localFile} {remoteFile}`, `dropbox download {remoteFile} {localFile}`, `dropbox list` etc.
-* Browser and npm aliases e.g `chrome`, `safari`, `opera`, `firefox`, `chromium` and others.
-* Launch all browsers with a specific URL `browsers "http://google.com"`
-* My Sublime Text build files (Grunt, Yeoman, r.js, SASS, Less and a few others included)
-* [@cowboy](http://github.com/cowboy)'s GitHub Pull Request Helper
-
 ## install the neccessary apps
 
-My basic setup is captured in `install-deps.sh` which adds homebrew, z, nave, etc.
+My basic setup is captured in `setup-a-new-machine.sh` . Run commands manually!
+
+## Copy or Symlink all .dotfiles to your home directory
+Skip .git directory !
 
 ## private config
 
@@ -57,8 +51,6 @@ add the below to this file: `~/Library/Application Support/Sublime Text 2/Packag
 <string>.vimrc</string>
 ```
 
-
-
 ### Sensible OS X defaults
 
 When setting up a new Mac, you may want to set some sensible OS X defaults:
@@ -66,6 +58,7 @@ When setting up a new Mac, you may want to set some sensible OS X defaults:
 ```bash
 ./.osx
 ```
+See also `setup-a-new-machine.sh`
 
 ## Similar projects
 

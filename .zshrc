@@ -101,18 +101,14 @@ source "$HOME/.console/console.rc" 2>/dev/null
 source $ZSH/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 # Load zsh-autosuggestions.
-source $ZSH/plugins/zsh-autosuggestions/autosuggestions.zsh
+source $ZSH/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 # Enable autosuggestions automatically.
-zle-line-init() {
-    zle autosuggest-start
-}
-zle -N zle-line-init
+
 bindkey '^f' vi-forward-word
 
 
-AUTOSUGGESTION_HIGHLIGHT_COLOR='fg=81'
-AUTOSUGGESTION_ACCEPT_RIGHT_ARROW=1
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=81'
 
 
 # Prefer US English and use UTF-8
