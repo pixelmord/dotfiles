@@ -19,6 +19,8 @@ Thumbs.db
 .buildpath
 .idea
 
+npm-debug.log
+
 # vagrant
 .vagrant
 
@@ -28,6 +30,10 @@ Thumbs.db
 # DRUPAL Ignore configuration files that may contain sensitive information.
 sites/*/settings*.php
 sites/*/settings*.yml
+sites/*/services*.yml
+development.services.yml
+sites/simpletest
+# patches/
 
 
 # DRUPAL Ignore paths that contain user-generated content.
@@ -35,3 +41,6 @@ sites/*/files
 sites/*/private
 sites/*.local
 sites/*.dev
+
+# tmp files
+*scsslint_tmp*.css

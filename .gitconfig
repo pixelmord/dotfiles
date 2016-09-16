@@ -8,6 +8,7 @@
 	s = status -s
 	df = diff --color --color-words --abbrev
 	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+	ls-subtrees = !"git log | grep git-subtree-dir | awk '{ print $2 }'"
 [color]
 	ui = true
 [apply]

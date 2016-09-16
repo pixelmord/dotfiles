@@ -53,8 +53,6 @@ plugins=(git npm bower node brew osx nvm rvm)
 
 # User configuration
 
-export PATH="/Users/andi/.nvm/versions/node/v0.12.2/bin:/Users/andi/.rvm/gems/ruby-2.2.1/bin:/Users/andi/.rvm/bin:bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/android-sdk-macosx/tools:/usr/local/android-sdk-macosx/platform-tools:/usr/local/opt/coreutils/libexec/gnubin:/usr/local/Cellar/php55/5.5.26/bin:/Users/andi/.composer/vendor/bin"
-# export MANPATH="/usr/local/man:$MANPATH"
 
 source $ZSH/oh-my-zsh.sh
 
@@ -91,18 +89,34 @@ for file in ~/.{extra,exports,aliases,functions}; do
 done
 unset file
 
-# Load RVM into a shell session *as a function*
-export NVM_DIR="/Users/andi/.nvm"
-[ -s $HOME/.nvm/nvm.sh ] && . $HOME/.nvm/nvm.sh # This loads NVM
-
+# drupal console
+source "$HOME/.console/console.rc" 2>/dev/null
 
 [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
 
 # init z   https://github.com/rupa/z
 . ~/code/z/z.sh
 
+# Load zsh-syntax-highlighting.
+source $ZSH/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+# Load zsh-autosuggestions.
+source $ZSH/plugins/zsh-autosuggestions/autosuggestions.zsh
+
+# Enable autosuggestions automatically.
+zle-line-init() {
+    zle autosuggest-start
+}
+zle -N zle-line-init
+bindkey '^f' vi-forward-word
+
+
+AUTOSUGGESTION_HIGHLIGHT_COLOR='fg=81'
+AUTOSUGGESTION_ACCEPT_RIGHT_ARROW=1
 
 
 # Prefer US English and use UTF-8
 export LC_ALL="en_US.UTF-8"
 export LANG="en_US"
+
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
