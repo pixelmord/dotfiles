@@ -101,14 +101,18 @@ source "$HOME/.console/console.rc" 2>/dev/null
 source $ZSH/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 # Load zsh-autosuggestions.
-source $ZSH/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+source $ZSH/plugins/zsh-autosuggestions/autosuggestions.zsh
 
 # Enable autosuggestions automatically.
-
+zle-line-init() {
+    zle autosuggest-start
+}
+zle -N zle-line-init
 bindkey '^f' vi-forward-word
 
 
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=81'
+AUTOSUGGESTION_HIGHLIGHT_COLOR='fg=81'
+AUTOSUGGESTION_ACCEPT_RIGHT_ARROW=1
 
 
 # Prefer US English and use UTF-8
@@ -116,3 +120,8 @@ export LC_ALL="en_US.UTF-8"
 export LANG="en_US"
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+
+
+# Automatically added by Platform.sh CLI installer
+export PATH="/Users/andi/.platformsh/bin:$PATH"
+. '/Users/andi/.platformsh/shell-config.rc' 2>/dev/null
