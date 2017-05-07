@@ -15,6 +15,8 @@ brew leaves      		> brew-list.txt    # all top-level brew installs
 brew cask list 			> cask-list.txt
 npm list -g --depth=0 	> npm-g-list.txt
 
+# git repos in workspace -> print remotes to textfile
+./gitrepos.sh
 
 # then compare brew-list to what's in `brew.sh`
 #   comm <(sort brew-list.txt) <(sort brew.sh-cleaned-up)
@@ -25,7 +27,7 @@ cp ~/.extra ~/migration/home
 cp ~/.z ~/migration/home
 
 cp -R ~/.ssh ~/migration/home
-cp -R ~/.gnupg ~/migration/home
+#cp -R ~/.gnupg ~/migration/home
 
 cp /Library/Preferences/SystemConfiguration/com.apple.airport.preferences.plist ~/migration  # wifi
 
@@ -36,31 +38,39 @@ cp -R ~/Library/Services ~/migration # automator stuff
 
 cp -R ~/Documents ~/migration
 
-cp ~/.bash_history ~/migration # back it up for fun?
+cp ~/.z ~/migration/home # z history file.
 
-cp ~/.gitconfig.local ~/migration
+cp -R ~/.aws ~/migration/home
 
-cp ~/.z ~/migration # z history file.
+cp -R ~/.docker ~/migration/home
+
+cp -R ~/.drush ~/migration/home
 
 # sublime text settings
-cp "~/Library/Application Support/Sublime Text 3/Packages" ~/migration
+cp -R "~/Library/Application Support/Sublime Text 3/Packages" ~/migration
+
+# PHPStrom settings
+cp -R "~/Library/Application\ Support/PhpStorm2017.1" ~/migration
+
+# server configs and data
+mkdir -p ~/migration/usr/local/etc/php
+cp -R /usr/local/etc/php/7.0 ~/migration/usr/local/etc/php
+
+mkdir -p ~/migration/usr/local/etc
+cp -R /usr/local/etc/nginx ~/migration/usr/local/etc
+
+mkdir -p ~/migration/usr/local/etc
+cp -R /usr/local/etc/elasticsearch ~/migration/usr/local/etc
+mkdir -p ~/migration/usr/local/var
+cp -R /usr/local/var/elasticsearch ~/migration/usr/local/var
+
+mkdir -p ~/migration/private/etc
+cp -R /private/etc/apache2 ~/migration/private/etc
 
 
 # iTerm settings.
   # Prefs, General, Use settings from Folder
 
-# Finder settings and TotalFinder settings
-#   Not sure how to do this yet. Really want to.
-
-# Timestats chrome extension stats
-#   chrome-extension://ejifodhjoeeenihgfpjijjmpomaphmah/options.html#_options
-# 	gotta export into JSON through devtools:
-#     copy(JSON.stringify(localStorage, null, '  '))
-#     pbpaste > timestats-canary.json.txt
-
-# Current Chrome tabs via OneTab
-
-# software licenses like sublimetext
 
 
 ### end of old machine backup
@@ -112,9 +122,8 @@ fi
 ##############################################################################################################
 ### homebrew!
 
-# (if your machine has /usr/local locked down (like google's), you can do this to place everything in ~/.homebrew
-mkdir $HOME/.homebrew && curl -L https://github.com/mxcl/homebrew/tarball/master | tar xz --strip 1 -C $HOME/.homebrew
-export PATH=$HOME/.homebrew/bin:$HOME/.homebrew/sbin:$PATH
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+
 
 # install all the things
 ./brew.sh
@@ -130,6 +139,9 @@ export PATH=$HOME/.homebrew/bin:$HOME/.homebrew/sbin:$PATH
 ### install of common things
 ###
 
+# ruby with rvm
+sh -c "$(curl -sSL https://get.rvm.io | bash -s stable --ruby)"
+
 # oh my zsh
 # https://github.com/robbyrussell/oh-my-zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
@@ -137,11 +149,10 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/mas
 
 # github.com/jamiew/git-friendly
 # the `push` command which copies the github compare URL to my clipboard is heaven
-bash < <( curl https://raw.github.com/jamiew/git-friendly/master/install.sh)
+bash < <( curl https://raw.githubusercontent.com/jamiew/git-friendly/master/install.sh)
 
 # global npm packages
 ./npm.sh
-
 
 # github.com/rupa/z   - oh how i love you
 git clone https://github.com/rupa/z.git ~/code/z
@@ -155,10 +166,19 @@ sudo easy_install Pygments
 # iterm with more margin! http://hackr.it/articles/prettier-gutter-in-iterm-2/
 #   (admittedly not as easy to maintain)
 
-
 # setting up the sublime symlink
 ln -sf "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" ~/bin/subl
 
+# install composer
+php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+php -r "if (hash_file('SHA384', 'composer-setup.php') === '669656bab3166a7aff8a7506b8cb2d1c292f042046c5a994c43155c0be6190fa0355160742ab2e1c88d40d5be660b410') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+php composer-setup.php
+php -r "unlink('composer-setup.php');"
+mv composer.phar /usr/local/bin/composer
+chmod +x /usr/local/bin/composer
+
+# install drush shim to run drush as if it was global
+composer global require webflo/drush-shim
 
 ###
 ##############################################################################################################

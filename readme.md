@@ -56,7 +56,7 @@ add the below to this file: `~/Library/Application Support/Sublime Text 2/Packag
 When setting up a new Mac, you may want to set some sensible OS X defaults:
 
 ```bash
-./.osx
+./osx.sh
 ```
 See also `setup-a-new-machine.sh`
 
@@ -85,8 +85,9 @@ I recommend getting a [`.jshintrc`](https://github.com/jshint/node-jshint/blob/m
 
 #### manual run
 * `install-deps.sh` - random apps i need installed
-* `.osx` - run on a fresh osx machine
-* `.brew` - homebrew intialization
+* `osx.sh` - run on a fresh osx machine
+* `brew.sh` - homebrew intialization
+* `brew-cask.sh` - homebrew intialization
 
 #### git, brah
 * `.git`
@@ -98,9 +99,3 @@ I recommend getting a [`.jshintrc`](https://github.com/jshint/node-jshint/blob/m
 
 
 ## Installation
-
-```bash
-git clone https://github.com/addyosmani/dotfiles.git && cd dotfiles && ./sync.sh
-```
-
-To update later on, just run the sync again.

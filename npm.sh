@@ -13,10 +13,14 @@ npm i -g nodemon
 npm i -g webpack
 npm i -g eslint
 npm i -g bower
+npm i -g browser-sync
+npm i -g babel-cli
+npm i -g phantomjs
+npm i -g casperjs
 
 # scaffolding
 npm i -g yo
 npm i -g generator-webapp
-npm i -g angular-cli
 npm i -g ember-cli
 npm i -g hexo-cli
+npm i -g create-react-app

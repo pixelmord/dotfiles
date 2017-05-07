@@ -26,7 +26,7 @@ alias photoshop="open -a '/Applications/Adobe\ Photoshop\ CC/Adobe\ Photoshop\ C
 alias gpr="~/code/gpr $1"
 alias selenium="java -jar '/usr/local/opt/selenium/selenium-server-standalone-2.39.0.jar'"
 alias vup="sudo echo .. && vagrant up"
-
+alias rm=trash
 
 # general shortcuts
 alias pro="cd ~/projects"
@@ -68,7 +68,7 @@ fi
 
 # `cat` with beautiful colors. requires Pygments installed.
 # 							   sudo easy_install Pygments
-alias c='pygmentize -O style=monokai -f console256 -g'
+alias ccat='pygmentize -O style=monokai -f console256 -g'
 
 # GIT STUFF
 
@@ -138,8 +138,6 @@ alias emptytrash="sudo rm -rfv /Volumes/*/.Trashes; rm -rfv ~/.Trash"
 alias hidedesktop="defaults write com.apple.finder CreateDesktop -bool false && killall Finder"
 alias showdesktop="defaults write com.apple.finder CreateDesktop -bool true && killall Finder"
 
-# Run DropboxUploader if you have it installed
-alias dropbox="~/code/Dropbox-Uploader/dropbox_uploader.sh $1"
 
 # PlistBuddy alias, because sometimes `defaults` just doesn’t cut it
 alias plistbuddy="/usr/libexec/PlistBuddy"
@@ -149,30 +147,25 @@ for method in GET HEAD POST PUT DELETE TRACE OPTIONS; do
 	alias "$method"="lwp-request -m '$method'"
 done
 
-# Stuff I never really use but cannot delete either because of http://xkcd.com/530/
-alias stfu="osascript -e 'set volume output muted true'"
-alias pumpitup="osascript -e 'set volume 10'"
-alias hax="growlnotify -a 'Activity Monitor' 'System error' -m 'WTF R U DOIN'"
-
 
 ### SERVER SERVICES ALIAS
 # Nginx
-alias nginx.start='sudo launchctl load /Library/LaunchDaemons/homebrew.mxcl.nginx.plist'
-alias nginx.stop='sudo launchctl unload /Library/LaunchDaemons/homebrew.mxcl.nginx.plist'
-alias nginx.restart='nginx.stop && nginx.start'
+# alias nginx.start='sudo launchctl load /Library/LaunchDaemons/homebrew.mxcl.nginx.plist'
+# alias nginx.stop='sudo launchctl unload /Library/LaunchDaemons/homebrew.mxcl.nginx.plist'
+# alias nginx.restart='nginx.stop && nginx.start'
 
-# PHP-FPM
-alias php-fpm.start="launchctl load -w ~/Library/LaunchAgents/homebrew.mxcl.php56.plist"
-alias php-fpm.stop="launchctl unload -w ~/Library/LaunchAgents/homebrew.mxcl.php56.plist"
-alias php-fpm.restart='php-fpm.stop && php-fpm.start'
+# # PHP-FPM
+# alias php-fpm.start="launchctl load -w ~/Library/LaunchAgents/homebrew.mxcl.php56.plist"
+# alias php-fpm.stop="launchctl unload -w ~/Library/LaunchAgents/homebrew.mxcl.php56.plist"
+# alias php-fpm.restart='php-fpm.stop && php-fpm.start'
 
-# MySQL
-alias mysql.start="launchctl load -w ~/Library/LaunchAgents/homebrew.mxcl.mysql.plist"
-alias mysql.stop="launchctl unload -w ~/Library/LaunchAgents/homebrew.mxcl.mysql.plist"
-alias mysql.restart='mysql.stop && mysql.start'
+# # MySQL
+# alias mysql.start="launchctl load -w ~/Library/LaunchAgents/homebrew.mxcl.mysql.plist"
+# alias mysql.stop="launchctl unload -w ~/Library/LaunchAgents/homebrew.mxcl.mysql.plist"
+# alias mysql.restart='mysql.stop && mysql.start'
 
-# Nginx Logs
-alias nginx.logs.error='tail -250f /usr/local/etc/nginx/logs/error.log'
-alias nginx.logs.access='tail -250f /usr/local/etc/nginx/logs/access.log'
-alias nginx.logs.default.access='tail -250f /usr/local/etc/nginx/logs/default.access.log'
-alias nginx.logs.default-ssl.access='tail -250f /usr/local/etc/nginx/logs/default-ssl.access.log'
+# # Nginx Logs
+# alias nginx.logs.error='tail -250f /usr/local/etc/nginx/logs/error.log'
+# alias nginx.logs.access='tail -250f /usr/local/etc/nginx/logs/access.log'
+# alias nginx.logs.default.access='tail -250f /usr/local/etc/nginx/logs/default.access.log'
+# alias nginx.logs.default-ssl.access='tail -250f /usr/local/etc/nginx/logs/default-ssl.access.log'

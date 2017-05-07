@@ -81,6 +81,7 @@ brew install elasticsearch
 brew install kibana
 brew install php70 php70-mcrypt php70-mongodb php70-opcache php70-xdebug
 brew install nginx
+brew install selenium-server-standalone
 brew install redis
 
 # Remove outdated versions from the cellar
