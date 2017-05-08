@@ -6,9 +6,7 @@
 
 
 # Install native apps
-
-brew install caskroom/cask/brew-cask
-brew tap caskroom/versions
+brew tap caskroom/cask
 
 brew cask install 1password
 brew cask install adobe-creative-cloud
@@ -35,6 +33,7 @@ brew cask install handbrake
 brew cask install imagealpha
 brew cask install imageoptim
 brew cask install iterm2
+brew cask install java
 brew cask install kaleidoscope
 brew cask install libreoffice
 brew cask install libreoffice-language-pack
