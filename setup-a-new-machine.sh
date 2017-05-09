@@ -16,6 +16,7 @@ brew cask list 			> cask-list.txt
 npm list -g --depth=0 	> npm-g-list.txt
 
 # git repos in workspace -> print remotes to textfile
+cd ~/dotfiles
 ./gitrepos.sh
 
 # then compare brew-list to what's in `brew.sh`
@@ -37,8 +38,6 @@ cp ~/Library/Preferences/com.tinyspeck.slackmacgap.plist ~/migration
 cp -R ~/Library/Services ~/migration # automator stuff
 
 cp -R ~/Documents ~/migration
-
-cp ~/.z ~/migration/home # z history file.
 
 cp -R ~/.aws ~/migration/home
 
