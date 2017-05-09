@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Install command-line tools using Homebrew
-brew tap josegonzalez/php
+brew tap homebrew/homebrew-php
 
 # Make sure we’re using the latest Homebrew
 brew update

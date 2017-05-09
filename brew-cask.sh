@@ -7,6 +7,7 @@
 
 # Install native apps
 brew tap caskroom/cask
+brew tap caskroom/versions
 
 brew cask install 1password
 brew cask install adobe-creative-cloud
