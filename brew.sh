@@ -61,7 +61,7 @@ brew install htop
 brew install imagemagick --with-webp
 brew install mcrypt
 brew install openssl
-brew install php-code-sniffer drupal-code-sniffer
+#brew install php-code-sniffer drupal-code-sniffer
 brew install phpunit
 brew install pv
 brew install python
@@ -80,7 +80,7 @@ brew install mongodb
 brew install sqlite
 brew install elasticsearch
 brew install kibana
-brew install php70 php70-mcrypt php70-mongodb php70-opcache php70-xdebug
+brew install php71 php71-mcrypt php71-mongodb php71-opcache php71-xdebug php71-imagick
 brew install nginx
 brew install selenium-server-standalone
 brew install redis
