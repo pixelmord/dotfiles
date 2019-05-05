@@ -18,8 +18,11 @@ Thumbs.db
 .project
 .buildpath
 .idea
+.vscode
 
+node_modules
 npm-debug.log
+yarn-error.log
 
 # vagrant
 .vagrant
