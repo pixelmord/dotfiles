@@ -1,6 +1,6 @@
 [user]
 	name = Andreas Sahle
-	email = andreas.sahle@wunderkraut.com
+	email = andreas.sahle@gmail.com
 [alias]
 	c = commit -am
 	up = !sh -c \"git pull $@ && git submodule update --init --recursive\"
