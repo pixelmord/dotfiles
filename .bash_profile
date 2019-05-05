@@ -32,3 +32,6 @@ source ~/.git-completion.bash
 # You could just use `-g` instead, but I like being explicit
 complete -W "NSGlobalDomain" defaults
 
+# Drupal console
+source "$HOME/.console/console.rc" 2>/dev/null
+
