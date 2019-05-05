@@ -12,7 +12,6 @@ brew tap caskroom/versions
 brew cask install 1password
 brew cask install adobe-creative-cloud
 brew cask install alfred
-brew cask install atom
 brew cask install balsamiq-mockups
 brew cask install bartender
 brew cask install caffeine
@@ -29,7 +28,6 @@ brew cask install google-chrome
 brew cask install google-chrome-canary
 brew cask install google-drive
 brew cask install google-photos-backup
-brew cask install gotomeeting
 brew cask install handbrake
 brew cask install imagealpha
 brew cask install imageoptim
