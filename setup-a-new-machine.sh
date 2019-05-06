@@ -3,80 +3,6 @@
   echo "do not run this script in one go. hit ctrl-c NOW"
   read -n 1
 
-
-##############################################################################################################
-###  backup old machine's key items
-
-mkdir -p ~/migration/home
-cd ~/migration
-
-# what is worth reinstalling?
-brew leaves      		> brew-list.txt    # all top-level brew installs
-brew cask list 			> cask-list.txt
-npm list -g --depth=0 	> npm-g-list.txt
-
-# git repos in workspace -> print remotes to textfile
-cd ~/dotfiles
-./gitrepos.sh
-
-# then compare brew-list to what's in `brew.sh`
-#   comm <(sort brew-list.txt) <(sort brew.sh-cleaned-up)
-
-# let's hold on to these
-
-cp ~/.extra ~/migration/home
-cp ~/.z ~/migration/home
-
-cp -R ~/.ssh ~/migration/home
-#cp -R ~/.gnupg ~/migration/home
-
-cp /Library/Preferences/SystemConfiguration/com.apple.airport.preferences.plist ~/migration  # wifi
-
-cp ~/Library/Preferences/net.limechat.LimeChat.plist ~/migration
-cp ~/Library/Preferences/com.tinyspeck.slackmacgap.plist ~/migration
-
-cp -R ~/Library/Services ~/migration # automator stuff
-
-cp -R ~/Documents ~/migration
-
-cp -R ~/.aws ~/migration/home
-
-cp -R ~/.docker ~/migration/home
-
-cp -R ~/.drush ~/migration/home
-
-# sublime text settings
-cp -R "~/Library/Application Support/Sublime Text 3/Packages" ~/migration
-
-# PHPStrom settings
-cp -R "~/Library/Application\ Support/PhpStorm2017.1" ~/migration
-
-# server configs and data
-mkdir -p ~/migration/usr/local/etc/php
-cp -R /usr/local/etc/php/7.0 ~/migration/usr/local/etc/php
-
-mkdir -p ~/migration/usr/local/etc
-cp -R /usr/local/etc/nginx ~/migration/usr/local/etc
-
-mkdir -p ~/migration/usr/local/etc
-cp -R /usr/local/etc/elasticsearch ~/migration/usr/local/etc
-mkdir -p ~/migration/usr/local/var
-cp -R /usr/local/var/elasticsearch ~/migration/usr/local/var
-
-mkdir -p ~/migration/private/etc
-cp -R /private/etc/apache2 ~/migration/private/etc
-
-
-# iTerm settings.
-  # Prefs, General, Use settings from Folder
-
-
-
-### end of old machine backup
-##############################################################################################################
-
-
-
 ##############################################################################################################
 ### XCode Command Line Tools
 #      thx https://github.com/alrra/dotfiles/blob/ff123ca9b9b/os/os_x/installs/install_xcode.sh
@@ -132,52 +58,51 @@ fi
 ##############################################################################################################
 
 
-
-
 ##############################################################################################################
 ### install of common things
 ###
-
-# ruby with rvm
-sh -c "$(curl -sSL https://get.rvm.io | bash -s stable --ruby)"
 
 # oh my zsh
 # https://github.com/robbyrussell/oh-my-zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 
+# ruby with rvm
+sh -c "$(curl -sSL https://get.rvm.io | bash -s stable --ruby)"
 
 # github.com/jamiew/git-friendly
 # the `push` command which copies the github compare URL to my clipboard is heaven
-bash < <( curl https://raw.githubusercontent.com/jamiew/git-friendly/master/install.sh)
+# bash < <( curl https://raw.githubusercontent.com/jamiew/git-friendly/master/install.sh)
 
 # global npm packages
 ./npm.sh
 
-# github.com/rupa/z   - oh how i love you
-git clone https://github.com/rupa/z.git ~/code/z
-# consider reusing your current .z file if possible. it's painful to rebuild :)
-# z is hooked up in .bash_profile
-
+# install better nanorc config
+# https://github.com/scopatz/nanorc
+curl https://raw.githubusercontent.com/scopatz/nanorc/master/install.sh | sh
 
 # for the c alias (syntax highlighted cat)
 sudo easy_install Pygments
 
-# iterm with more margin! http://hackr.it/articles/prettier-gutter-in-iterm-2/
-#   (admittedly not as easy to maintain)
+# change to bash 4 (installed by homebrew)
+BASHPATH=$(brew --prefix)/bin/bash
+#sudo echo $BASHPATH >> /etc/shells
+sudo bash -c 'echo $(brew --prefix)/bin/bash >> /etc/shells'
+chsh -s $BASHPATH # will set for current user only.
+echo $BASH_VERSION # should be 4.x not the old 3.2.X
 
-# setting up the sublime symlink
-ln -sf "/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl" ~/bin/subl
 
 # install composer
 php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-php -r "if (hash_file('SHA384', 'composer-setup.php') === '669656bab3166a7aff8a7506b8cb2d1c292f042046c5a994c43155c0be6190fa0355160742ab2e1c88d40d5be660b410') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+php -r "if (hash_file('sha384', 'composer-setup.php') === '48e3236262b34d30969dca3c37281b3b4bbe3221bda826ac6a9a62d6444cdb0dcd0615698a5cbe587c3f0fe57a54d8f5') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
 php composer-setup.php
 php -r "unlink('composer-setup.php');"
 mv composer.phar /usr/local/bin/composer
 chmod +x /usr/local/bin/composer
 
 # install drush shim to run drush as if it was global
-composer global require webflo/drush-shim
+curl -OL https://github.com/drush-ops/drush-launcher/releases/download/0.6.0/drush.phar
+chmod +x drush.phar
+sudo mv drush.phar /usr/local/bin/drush
 
 ###
 ##############################################################################################################
@@ -206,6 +131,13 @@ composer global require webflo/drush-shim
 ### symlinks to link dotfiles into ~/
 ###
 
+#   move git credentials into ~/.gitconfig.local    	http://stackoverflow.com/a/13615531/89484
+#   now .gitconfig can be shared across all machines and only the .local changes
+
+# symlink it up!
+./symlink-setup.sh
+
+# add manual symlink for .ssh/config
 
 ###
 ##############################################################################################################
