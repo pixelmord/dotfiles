@@ -1,6 +1,14 @@
 # Compiled Python files
 *.pyc
 
+# working files
+.vim/viminfo
+.vim/swaps/*
+.vim/undo
+
+# git credential file
+.gitconfig.local
+
 # Folder view configuration files
 .DS_Store
 Desktop.ini
@@ -20,6 +28,7 @@ Thumbs.db
 .idea
 .vscode
 
+# node stuff
 node_modules
 npm-debug.log
 yarn-error.log
