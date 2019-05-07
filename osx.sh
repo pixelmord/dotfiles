@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 
-# ~/.osx
-# paul's slight fork of https://mths.be/osx
+# ~/osx.sh
+# andis slight fork of paul irish's slight fork of https://mths.be/osx
 
 
 # FWIW, this `defaults find` is good at finding some set preferences.
 # e.g.    defaults find com.apple.ActivityMonitor
 
+# Close any open System Preferences panes, to prevent them from overriding
+# settings we’re about to change
+osascript -e 'tell application "System Preferences" to quit'
 
 # Ask for the administrator password upfront
 sudo -v
@@ -142,6 +145,8 @@ sudo touch /private/var/vm/sleepimage
 # …and make sure it can’t be rewritten
 sudo chflags uchg /private/var/vm/sleepimage
 
+# Disable the sudden motion sensor as it’s not useful for SSDs
+sudo pmset -a sms 0
 
 ###############################################################################
 # Trackpad, mouse, keyboard, Bluetooth accessories, and input                 #
@@ -155,15 +160,28 @@ defaults write NSGlobalDomain com.apple.mouse.tapBehavior -int 1
 # Increase sound quality for Bluetooth headphones/headsets
 defaults write com.apple.BluetoothAudioAgent "Apple Bitpool Min (editable)" -int 40
 
+# mute all sounds, incl volume change feedback
+defaults write "com.apple.sound.beep.feedback" -int 0
+defaults write com.apple.systemsound 'com.apple.sound.beep.volume' -float 0
+defaults write "com.apple.systemsound" "com.apple.sound.uiaudio.enabled" -int 0
+
 # Enable full keyboard access for all controls
 # (e.g. enable Tab in modal dialogs)
 defaults write NSGlobalDomain AppleKeyboardUIMode -int 3
+
+# Enable access for assistive devices
+echo -n 'a' | sudo tee /private/var/db/.AccessibilityAPIEnabled > /dev/null 2>&1
+sudo chmod 444 /private/var/db/.AccessibilityAPIEnabled
+# TODO: avoid GUI password prompt somehow (http://apple.stackexchange.com/q/60476/4408)
+#sudo osascript -e 'tell application "System Events" to set UI elements enabled to true'
 
 # Use scroll gesture with the Ctrl (^) modifier key to zoom
 defaults write com.apple.universalaccess closeViewScrollWheelToggle -bool true
 defaults write com.apple.universalaccess HIDScrollZoomModifierMask -int 262144
 # Follow the keyboard focus while zoomed in
 defaults write com.apple.universalaccess closeViewZoomFollowsFocus -bool false
+# Zoom should use nearest neighbor instead of smoothing.
+defaults write com.apple.universalaccess 'closeViewSmoothImages' -bool false
 
 # Disable press-and-hold for keys in favor of key repeat
 defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
@@ -193,6 +211,9 @@ launchctl unload -w /System/Library/LaunchAgents/com.apple.rcd.plist 2> /dev/nul
 defaults write com.apple.screensaver askForPassword -int 1
 defaults write com.apple.screensaver askForPasswordDelay -int 0
 
+# Automatically illuminate built-in MacBook keyboard in low light
+defaults write com.apple.BezelServices kDim -bool true
+
 # Save screenshots to the desktop
 defaults write com.apple.screencapture location -string "${HOME}/Desktop"
 
@@ -203,7 +224,7 @@ defaults write com.apple.screencapture type -string "png"
 defaults write com.apple.screencapture disable-shadow -bool true
 
 # Enable subpixel font rendering on non-Apple LCDs
-defaults write NSGlobalDomain AppleFontSmoothing -int 1
+defaults write NSGlobalDomain AppleFontSmoothing -int 2
 
 # Enable HiDPI display modes (requires restart)
 sudo defaults write /Library/Preferences/com.apple.windowserver DisplayResolutionEnabled -bool true
@@ -302,6 +323,9 @@ defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
 # Disable the warning before emptying the Trash
 defaults write com.apple.finder WarnOnEmptyTrash -bool false
 
+# Empty Trash securely by default
+defaults write com.apple.finder EmptyTrashSecurely -bool true
+
 # Enable AirDrop over Ethernet and on unsupported Macs running Lion
 defaults write com.apple.NetworkBrowser BrowseAllInterfaces -bool true
 
@@ -384,9 +408,8 @@ defaults write com.apple.dock showhidden -bool false
 # Reset Launchpad, but keep the desktop wallpaper intact
 find "${HOME}/Library/Application Support/Dock" -name "*-*.db" -maxdepth 1 -delete
 
-# Add iOS & Watch Simulator to Launchpad
+# Add iOS Simulator to Launchpad
 sudo ln -sf "/Applications/Xcode.app/Contents/Developer/Applications/Simulator.app" "/Applications/Simulator.app"
-sudo ln -sf "/Applications/Xcode.app/Contents/Developer/Applications/Simulator (Watch).app" "/Applications/Simulator (Watch).app"
 
 # Add a spacer to the left side of the Dock (where the applications are)
 #defaults write com.apple.dock persistent-apps -array-add '{tile-data={}; tile-type="spacer-tile";}'
@@ -575,6 +598,65 @@ sudo mdutil -E / > /dev/null
 # Only use UTF-8 in Terminal.app
 defaults write com.apple.terminal StringEncodings -array 4
 
+tell application "Terminal"
+
+	local allOpenedWindows
+	local initialOpenedWindows
+	local windowID
+	set themeName to "Solarized Dark xterm-256color"
+
+	(* Store the IDs of all the open terminal windows. *)
+	set initialOpenedWindows to id of every window
+
+	(* Open the custom theme so that it gets added to the list
+	   of available terminal themes (note: this will open two
+	   additional terminal windows). *)
+	do shell script "open '$HOME/init/" & themeName & ".terminal'"
+
+	(* Wait a little bit to ensure that the custom theme is added. *)
+	delay 1
+
+	(* Set the custom theme as the default terminal theme. *)
+	set default settings to settings set themeName
+
+	(* Get the IDs of all the currently opened terminal windows. *)
+	set allOpenedWindows to id of every window
+
+	repeat with windowID in allOpenedWindows
+
+		(* Close the additional windows that were opened in order
+		   to add the custom theme to the list of terminal themes. *)
+		if initialOpenedWindows does not contain windowID then
+			close (every window whose id is windowID)
+
+		(* Change the theme for the initial opened terminal windows
+		   to remove the need to close them in order for the custom
+		   theme to be applied. *)
+		else
+			set current settings of tabs of (every window whose id is windowID) to settings set themeName
+		end if
+
+	end repeat
+
+end tell
+
+EOD
+
+# Enable “focus follows mouse” for Terminal.app and all X11 apps
+# i.e. hover over a window and start typing in it without clicking first
+#defaults write com.apple.terminal FocusFollowsMouse -bool true
+#defaults write org.x.X11 wm_ffm -bool true
+
+# Enable Secure Keyboard Entry in Terminal.app
+# See: https://security.stackexchange.com/a/47786/8918
+defaults write com.apple.terminal SecureKeyboardEntry -bool true
+
+# Disable the annoying line marks
+defaults write com.apple.Terminal ShowLineMarks -int 0
+
+# Install the Solarized Dark theme for iTerm
+open "${HOME}/init/Solarized Dark.itermcolors"
+
 # Don’t display the annoying prompt when quitting iTerm
 defaults write com.googlecode.iterm2 PromptOnQuit -bool false
 
@@ -601,8 +683,21 @@ defaults write com.apple.ActivityMonitor IconType -int 5
 # Show all processes in Activity Monitor
 defaults write com.apple.ActivityMonitor ShowCategory -int 0
 
-# Sort Activity Monitor results by CPU usage
-defaults write com.apple.ActivityMonitor SortColumn -string "CPUUsage"
+# Sets columns for all tabs
+defaults read com.apple.ActivityMonitor "UserColumnsPerTab v5.0" -dict \
+    '0' '( Command, CPUUsage, CPUTime, Threads, PID, UID, Ports )' \
+    '1' '( Command, ResidentSize, Threads, Ports, PID, UID,  )' \
+    '2' '( Command, PowerScore, 12HRPower, AppSleep, UID, powerAssertion )' \
+    '3' '( Command, bytesWritten, bytesRead, Architecture, PID, UID, CPUUsage )' \
+    '4' '( Command, txBytes, rxBytes, PID, UID, txPackets, rxPackets, CPUUsage )'
+
+# Set sort column
+defaults write com.apple.ActivityMonitor UserColumnSortPerTab -dict \
+    '0' '{ direction = 0; sort = CPUUsage; }' \
+    '1' '{ direction = 0; sort = ResidentSize; }' \
+    '2' '{ direction = 0; sort = 12HRPower; }' \
+    '3' '{ direction = 0; sort = bytesWritten; }' \
+    '4' '{ direction = 0; sort = rxBytes; }'
 defaults write com.apple.ActivityMonitor SortDirection -int 0
 
 # Show Data in the Disk graph (instead of IO)
@@ -620,6 +715,9 @@ defaults write com.apple.addressbook ABShowDebugMenu -bool true
 
 # Enable Dashboard dev mode (allows keeping widgets on the desktop)
 defaults write com.apple.dashboard devmode -bool true
+
+# Enable the debug menu in iCal (pre-10.8)
+defaults write com.apple.iCal IncludeDebugMenu -bool true
 
 # Use plain text mode for new TextEdit documents
 defaults write com.apple.TextEdit RichText -int 0
