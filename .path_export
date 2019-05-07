@@ -1,5 +1,4 @@
 
-
       PATH:$(yarn global bin)
 PATH=$PATH:/usr/local/flutter/bin
 PATH=$PATH:/usr/local/bin
@@ -14,4 +13,3 @@ PATH=$PATH:$(brew --prefix coreutils)/libexec/gnubin
 PATH=$PATH:$HOME/.composer/vendor/bin
 
 export PATH
-
