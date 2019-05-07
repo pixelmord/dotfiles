@@ -14,3 +14,14 @@ export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 # github.com/trapd00r/LS_COLORS
 command -v gdircolors >/dev/null 2>&1 || alias gdircolors="dircolors"
 eval "$(gdircolors -b ~/.dircolors)"
+
+NP=$(which node)
+BP=${NP%bin/node} #this replaces the string '/bin/node'
+LP="${BP}lib/node_modules"
+export NODE_PATH="$LP"
+
+export ANDROID_HOME=$HOME/Library/Android/sdk/
+
+export JAVA_HOME=$(/usr/libexec/java_home)
+
+export TEMP=/tmp
