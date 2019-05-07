@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Install command-line tools using Homebrew
-brew tap homebrew/homebrew-php
 
 # Make sure we’re using the latest Homebrew
 brew update
@@ -17,6 +16,17 @@ brew install findutils
 # GNU `sed`, overwriting the built-in `sed`
 brew install gnu-sed --with-default-names
 
+# Bash 4
+# Note: don’t forget to add `/usr/local/bin/bash` to `/etc/shells` before running `chsh`.
+brew install bash
+brew install bash-completion
+brew install homebrew/completions/brew-cask-completion
+
+# zsh
+brew install zsh
+# zsh plugin manager
+brew install antigen
+
 # generic colouriser  http://kassiopeia.juls.savba.sk/~garabik/software/grc/
 brew install grc
 
@@ -25,15 +35,16 @@ brew install wget --with-iri
 
 # Install more recent versions of some OS X tools
 brew install vim --with-override-system-vi
+brew install homebrew/dupes/nano
 brew install homebrew/dupes/grep
 brew install homebrew/dupes/openssh
 brew install homebrew/dupes/screen
 
+# z hopping around folders
+brew install z
+
 # run this script when this file changes guy.
 brew install entr
-
-# github util. imho better than hub
-brew install gh
 
 # mtr - ping & traceroute. best.
 brew install mtr
@@ -51,16 +62,14 @@ brew install android-platform-tools
 brew install autoconf
 brew install automake
 brew install awscli
-brew install behat
-brew install boost
-brew install composer
 brew install ffmpeg --with-libvpx
-brew install flow
 brew install freetype
 brew install htop
 brew install imagemagick --with-webp
 brew install mcrypt
 brew install openssl
+# brew install php71 php71-mcrypt php71-mongodb php71-opcache php71-xdebug php71-imagick
+brew install php
 #brew install php-code-sniffer drupal-code-sniffer
 brew install phpunit
 brew install pv
@@ -72,6 +81,7 @@ brew install tree
 brew install zopfli
 brew install yarn
 brew install youtube-dl
+brew install watchman
 
 # install local servers and development stuff
 brew install node # This installs `npm` too using the recommended installation method
@@ -80,9 +90,7 @@ brew install mongodb
 brew install sqlite
 brew install elasticsearch
 brew install kibana
-brew install php71 php71-mcrypt php71-mongodb php71-opcache php71-xdebug php71-imagick
 brew install nginx
-brew install selenium-server-standalone
 brew install redis
 
 # Remove outdated versions from the cellar
