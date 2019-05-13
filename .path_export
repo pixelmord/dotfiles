@@ -1,5 +1,5 @@
 
-      PATH:$(yarn global bin)
+      PATH=$(yarn global bin)
 PATH=$PATH:/usr/local/flutter/bin
 PATH=$PATH:/usr/local/bin
 PATH=$PATH:/usr/local/sbin
