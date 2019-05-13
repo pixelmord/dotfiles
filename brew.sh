@@ -57,7 +57,7 @@ brew install mtr
 
 # Install other useful binaries
 brew install git
-brew install ack
+brew install the_silver_searcher
 brew install android-platform-tools
 brew install autoconf
 brew install automake

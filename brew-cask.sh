@@ -25,6 +25,7 @@ brew cask install fantastical
 brew cask install firefox
 brew cask install firefoxnightly
 brew cask install flux
+brew cask install forklift
 brew cask install gitbook-editor
 brew cask install godot
 brew cask install google-chrome
