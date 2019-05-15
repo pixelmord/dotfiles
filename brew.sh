@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Keep-alive: update existing `sudo` time stamp until we're  finished
+while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+
 # Install command-line tools using Homebrew
 
 # Make sure we’re using the latest Homebrew
@@ -62,10 +65,10 @@ brew install android-platform-tools
 brew install autoconf
 brew install automake
 brew install awscli
-brew install ffmpeg --with-libvpx
+brew install ffmpeg
 brew install freetype
 brew install htop
-brew install imagemagick --with-webp
+brew install imagemagick
 brew install mcrypt
 brew install openssl
 # brew install php71 php71-mcrypt php71-mongodb php71-opcache php71-xdebug php71-imagick

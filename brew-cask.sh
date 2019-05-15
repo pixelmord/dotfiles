@@ -1,9 +1,12 @@
 #!/bin/bash
 
+# Keep-alive: update existing `sudo` time stamp until we're  finished
+while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
 # to maintain cask ....
 #     `brew cask upgrade && brew cask cleanup`
 
+brew tap homebrew/cask-versions
 
 brew cask install 1password
 brew cask install adobe-creative-cloud
@@ -15,7 +18,7 @@ brew cask install bartender
 brew cask install betterzip
 brew cask install boxcryptor
 brew cask install daisydisk
-brew cask install dash2
+brew cask install dash
 brew cask install disk-inventory-x
 brew cask install docker
 brew cask install dropbox
@@ -23,14 +26,13 @@ brew cask install duet
 brew cask install evernote
 brew cask install fantastical
 brew cask install firefox
-brew cask install firefoxnightly
+brew cask install firefox-nightly
 brew cask install flux
 brew cask install forklift
 brew cask install gitbook-editor
 brew cask install godot
 brew cask install google-chrome
 brew cask install google-chrome-canary
-brew cask install google-drive
 brew cask install google-backup-and-sync
 brew cask install grammarly
 brew cask install graphql-ide
@@ -82,5 +84,5 @@ brew cask install wordpresscom
 # brew cask install zeplin
 brew cask install zoomus
 
-brew tap caskroom/fonts
+#brew tap caskroom/fonts
 brew cask install font-fira-code
