@@ -4,6 +4,7 @@ npm i -g @sanity/cli
 npm i -g @storybook/cli
 npm i -g apollo-codegen
 npm i -g artillery
+npm i -g autocannon
 npm i -g awsmobile-cli
 npm i -g babel-cli
 npm i -g browser-sync
@@ -35,3 +36,4 @@ npm i -g trash-cli
 npm i -g typedoc
 npm i -g typescript
 npm i -g typesync
+npm i -g xo
