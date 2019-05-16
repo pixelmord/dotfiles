@@ -100,7 +100,7 @@
 	prune = true
 
 [remote "origin"]
-	fetch = +refs/heads/*:refs/remotes/origin/*
+	# fetch = +refs/heads/*:refs/remotes/origin/*
 [stash]
 	showPatch = true
 [log]
