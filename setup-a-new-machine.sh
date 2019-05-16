@@ -64,7 +64,8 @@ fi
 
 # oh my zsh
 # https://github.com/robbyrussell/oh-my-zsh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+# oh-my-zsh is installed by antigen in .zshrc!
+#sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 
 # ruby with rvm
 sh -c "$(curl -sSL https://get.rvm.io | bash -s stable --ruby)"
