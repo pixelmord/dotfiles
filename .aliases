@@ -134,6 +134,6 @@ for method in GET HEAD POST PUT DELETE TRACE OPTIONS; do
 done
 
 # Update installed Homebrew, npm, and their installed packages
-alias brew_update="brew -v update; brew upgrade --force-bottle --cleanup; brew cleanup; brew cask cleanup; brew prune; brew doctor"
+alias brew_update="brew -v update; brew upgrade --force-bottle --cleanup; brew cleanup; brew doctor"
 alias npm_update='npm install npm -g; npm update -g'
 alias all_update='brew_update; npm_update'
