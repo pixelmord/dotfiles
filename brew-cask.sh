@@ -43,6 +43,7 @@ brew cask install insomnia
 brew cask install iterm2
 brew cask install java
 brew cask install jetbrains-toolbox
+brew cask install jsui
 brew cask install kaleidoscope
 brew cask install kap
 brew cask install kindle

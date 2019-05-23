@@ -42,12 +42,28 @@ fi
 ###
 ##############################################################################################################
 
+##############################################################################################################
+### SSH!
+
+# copy your .ssh folder from migration
+# @todo: check existing of source folder
+cp ~/migration/home/.ssh ~/.ssh
+
+# add ssh key to agent
+ssh-add -K ~/.ssh/id_rsa
+
+
+### end of SSH
+##############################################################################################################
 
 
 ##############################################################################################################
 ### homebrew!
 
+# install
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+# set permissions on folder
+
 
 
 # install all the things
