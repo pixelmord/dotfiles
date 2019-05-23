@@ -29,6 +29,7 @@ npm i -g nodemon
 npm i -g now
 npm i -g npm-check
 npm i -g preact-cli
+npm i -g prettier
 npm i -g prisma
 npm i -g reactql
 npm i -g source-map-explorer
@@ -37,3 +38,4 @@ npm i -g typedoc
 npm i -g typescript
 npm i -g typesync
 npm i -g xo
+npm i -g dockly
