@@ -34,6 +34,7 @@ npm i -g prettier
 npm i -g prisma
 npm i -g reactql
 npm i -g source-map-explorer
+npm i -g sync-dotenv
 npm i -g trash-cli
 npm i -g typedoc
 npm i -g typescript
