@@ -60,6 +60,7 @@ brew install mtr
 
 # Install other useful binaries
 brew install git
+brew install hub
 brew install the_silver_searcher
 brew install android-platform-tools
 brew install autoconf

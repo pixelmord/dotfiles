@@ -10,6 +10,7 @@ npm i -g babel-cli
 npm i -g browser-sync
 npm i -g create-next-app
 npm i -g create-react-app
+npm i -g degit
 npm i -g diff-so-fancy
 npm i -g ember-cli
 npm i -g forever
