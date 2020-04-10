@@ -102,3 +102,10 @@ zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 
 # Load default dotfiles
 source ~/.bash_profile
 
+if [ -e /Users/andreassahle/.nix-profile/etc/profile.d/nix.sh ]; then . /Users/andreassahle/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/andreassahle/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/andreassahle/google-cloud-sdk/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/Users/andreassahle/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/andreassahle/google-cloud-sdk/completion.zsh.inc'; fi
