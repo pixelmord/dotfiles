@@ -10,6 +10,7 @@ npm i -g babel-cli
 npm i -g browser-sync
 npm i -g create-next-app
 npm i -g create-react-app
+npm i -g degit
 npm i -g diff-so-fancy
 npm i -g ember-cli
 npm i -g forever
@@ -33,6 +34,7 @@ npm i -g prettier
 npm i -g prisma
 npm i -g reactql
 npm i -g source-map-explorer
+npm i -g sync-dotenv
 npm i -g trash-cli
 npm i -g typedoc
 npm i -g typescript
