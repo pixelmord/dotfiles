@@ -8,32 +8,44 @@ while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
 brew tap homebrew/cask-versions
 
+# brew cask install zeplin
 brew cask install 1password
 brew cask install adobe-creative-cloud
 brew cask install alfred
 brew cask install alinof-timer
 brew cask install arq
 brew cask install atext
+brew cask install atom
+brew cask install balsamiq-mockups
 brew cask install bartender
 brew cask install betterzip
+brew cask install blisk
 brew cask install boxcryptor
+brew cask install brave-browser
+brew cask install canary
+brew cask install cerebro
+brew cask install clockify
 brew cask install daisydisk
 brew cask install dash
+brew cask install discord
 brew cask install disk-inventory-x
 brew cask install docker
 brew cask install dropbox
 brew cask install duet
 brew cask install evernote
 brew cask install fantastical
+brew cask install figma
 brew cask install firefox
 brew cask install firefox-nightly
+brew cask install firefoxnightly
 brew cask install flux
 brew cask install forklift
+brew cask install freecad
 brew cask install gitbook-editor
 brew cask install godot
+brew cask install google-backup-and-sync
 brew cask install google-chrome
 brew cask install google-chrome-canary
-brew cask install google-backup-and-sync
 brew cask install grammarly
 brew cask install graphql-ide
 brew cask install handbrake
@@ -54,36 +66,50 @@ brew cask install lepton
 brew cask install libreoffice
 brew cask install libreoffice-language-pack
 brew cask install licecap
+brew cask install limechat
 brew cask install little-snitch
+brew cask install mailspring
 brew cask install marshallofsound-google-play-music-player
 brew cask install menubar-stats
 brew cask install micro-snitch
+brew cask install mongodb-compass
 brew cask install mongodb-compass-community
 brew cask install moom
 brew cask install now
 brew cask install nvalt
+brew cask install obsidian
+brew cask install path-finder
 brew cask install qlcolorcode
 brew cask install qlimagesize
 brew cask install qlmarkdown
 brew cask install qlstephen
 brew cask install quicklook-json
+brew cask install raindropio
 brew cask install real-vnc
+brew cask install rescuetime
+brew cask install rocket
 brew cask install screenflow
+brew cask install screenhero
 brew cask install sequel-pro
+brew cask install sketch
 brew cask install skitch
 brew cask install slack
 brew cask install station
 brew cask install sublime-text
-brew cask install tower
+brew cask install telegram
+brew cask install tower2
 brew cask install vagrant
 brew cask install vagrant-manager
 brew cask install virtualbox
 brew cask install visual-studio-code-insiders
 brew cask install vlc
+brew cask install vyprvpn
 brew cask install webpquicklook
 brew cask install wordpresscom
-# brew cask install zeplin
-brew cask install zoomus
+brew cask install zeplin
+brew cask install zoom
+
 
 #brew tap caskroom/fonts
 brew cask install font-fira-code
+
