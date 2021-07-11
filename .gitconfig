@@ -92,9 +92,10 @@
 #	templatedir = ~/.git_template
 
 [filter "lfs"]
-	clean = git-lfs clean %f
-	smudge = git-lfs smudge %f
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
 	required = true
+	process = git-lfs filter-process
 
 [fetch]
 	prune = true
@@ -122,3 +123,8 @@
 # use separate file for username / github token / etc
 [include]
   path = ~/.gitconfig.local
+[user]
+	name = Andreas Adam
+	email = andreas.adam@composableweb.com
+[init]
+	defaultBranch = main

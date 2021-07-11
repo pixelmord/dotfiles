@@ -15,7 +15,7 @@ fpath=( "$HOME/.zfunctions" $fpath )
 
 
 # antigen time! "brew install antigen" !
-source /usr/local/share/antigen/antigen.zsh
+source ~/antigen.zsh
 
 ######################################################################
 ### install some antigen bundles
@@ -102,10 +102,13 @@ zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 
 # Load default dotfiles
 source ~/.bash_profile
 
-if [ -e /Users/andreassahle/.nix-profile/etc/profile.d/nix.sh ]; then . /Users/andreassahle/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
+if [ -e /Users/andreasadam/.nix-profile/etc/profile.d/nix.sh ]; then . /Users/andreasadam/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
 
 # The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/andreassahle/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/andreassahle/google-cloud-sdk/path.zsh.inc'; fi
+if [ -f '/Users/andreasadam/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/andreasadam/google-cloud-sdk/path.zsh.inc'; fi
 
 # The next line enables shell command completion for gcloud.
-if [ -f '/Users/andreassahle/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/andreassahle/google-cloud-sdk/completion.zsh.inc'; fi
+if [ -f '/Users/andreasadam/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/andreasadam/google-cloud-sdk/completion.zsh.inc'; fi
+
+test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+

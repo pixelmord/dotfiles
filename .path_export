@@ -11,5 +11,6 @@ PATH=$PATH:$HOME/Library/Android/sdk/platform-tools
 PATH=$PATH:$HOME/Library/Android/sdk/tools/bin
 PATH=$PATH:$(brew --prefix coreutils)/libexec/gnubin
 PATH=$PATH:$HOME/.composer/vendor/bin
+PATH=$PATH:/usr/local/opt/mongodb-community@4.2/bin
 
 export PATH
