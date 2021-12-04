@@ -27,6 +27,7 @@ alias f='open -a Finder'
 alias photoshop="open -a '/Applications/Adobe\ Photoshop\ CC/Adobe\ Photoshop\ CC.app'"
 alias vup="sudo echo .. && vagrant up"
 alias rm=trash
+alias code=code-insiders
 
 # general shortcuts
 alias ws="cd ~/workspace"
@@ -38,7 +39,7 @@ alias ws="cd ~/workspace"
 hash gls >/dev/null 2>&1 || alias gls="ls"
 
 # always use color, even when piping (to awk,grep,etc)
-if gls --color > /dev/null 2>&1; then colorflag="--color"; else colorflag="-G"; fi;
+if gls --color >/dev/null 2>&1; then colorflag="--color"; else colorflag="-G"; fi
 export CLICOLOR_FORCE=1
 
 # ls options: A = include hidden (but not . or ..), F = put `/` after folders, h = byte unit suffixes
@@ -48,7 +49,6 @@ alias l='gls -lFh ${colorflag} --group-directories-first'
 alias la='gls -lAFh ${colorflag} --group-directories-first'
 # List only directories
 alias lsd='ls -l | grep "^d"'
-
 
 # `cat` with beautiful colors. requires Pygments installed.
 # 							   sudo easy_install Pygments
@@ -124,13 +124,12 @@ alias emptytrash=" \
 alias hidedesktop="defaults write com.apple.finder CreateDesktop -bool false && killall Finder"
 alias showdesktop="defaults write com.apple.finder CreateDesktop -bool true && killall Finder"
 
-
 # PlistBuddy alias, because sometimes `defaults` just doesn’t cut it
 alias plistbuddy="/usr/libexec/PlistBuddy"
 
 # One of @janmoesen’s ProTip™s
 for method in GET HEAD POST PUT DELETE TRACE OPTIONS; do
-	alias "$method"="lwp-request -m '$method'"
+    alias "$method"="lwp-request -m '$method'"
 done
 
 # Update installed Homebrew, npm, and their installed packages
