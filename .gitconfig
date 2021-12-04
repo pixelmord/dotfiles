@@ -128,3 +128,5 @@
 	email = andreas.adam@composableweb.com
 [init]
 	defaultBranch = main
+[pull]
+	rebase = true
