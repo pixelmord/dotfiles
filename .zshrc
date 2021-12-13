@@ -29,10 +29,15 @@ source /usr/local/share/antigen/antigen.zsh
 antigen use oh-my-zsh
 
 # PLUGINS
+antigen bundle aliases
+antigen bundle ag
 antigen bundle git
 antigen bundle node
+antigen bundle npm
 antigen bundle docker
 antigen bundle docker-compose
+antigen bundle web-search
+antigen bundle yarn
 
 # Guess what to install when running an unknown command.
 antigen bundle command-not-found
@@ -101,6 +106,28 @@ zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 
 
 # Load default dotfiles
 source ~/.bash_profile
+
+# NVM auto switch node version from .nvmrc
+autoload -U add-zsh-hook
+load-nvmrc() {
+  local node_version="$(nvm version)"
+  local nvmrc_path="$(nvm_find_nvmrc)"
+
+  if [ -n "$nvmrc_path" ]; then
+    local nvmrc_node_version=$(nvm version "$(cat "${nvmrc_path}")")
+
+    if [ "$nvmrc_node_version" = "N/A" ]; then
+      nvm install
+    elif [ "$nvmrc_node_version" != "$node_version" ]; then
+      nvm use
+    fi
+  elif [ "$node_version" != "$(nvm version default)" ]; then
+    echo "Reverting to nvm default version"
+    nvm use default
+  fi
+}
+add-zsh-hook chpwd load-nvmrc
+load-nvmrc
 
 if [ -e /Users/andreasadam/.nix-profile/etc/profile.d/nix.sh ]; then . /Users/andreasadam/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
 
