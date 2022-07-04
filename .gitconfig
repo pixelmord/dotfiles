@@ -123,7 +123,7 @@ email = andreas.adam@composableweb.com
 [init]
 defaultBranch = main
 [pull]
-rebase = true
+rebase = false
 # use separate file for username / github token / etc
 [include]
 path = ~/.gitconfig.local
