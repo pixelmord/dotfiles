@@ -8,3 +8,5 @@
 # tabtab source for slss package
 # uninstall by removing these lines or running `tabtab uninstall slss`
 [ -f /Users/andreassahle/workspace/technews/node_modules/tabtab/.completions/slss.bash ] && . /Users/andreassahle/workspace/technews/node_modules/tabtab/.completions/slss.bash
+export VOLTA_HOME="$HOME/.volta"
+export PATH="$VOLTA_HOME/bin:$PATH"

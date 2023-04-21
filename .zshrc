@@ -56,8 +56,6 @@ antigen bundle robbyrussell/oh-my-zsh plugins/z
 # nicoulaj's moar completion files for zsh -- not sure why disabled.
 antigen bundle zsh-users/zsh-completions
 
-# Syntax highlighting on the readline
-antigen bundle zsh-users/zsh-syntax-highlighting
 
 # history search
 antigen bundle zsh-users/zsh-history-substring-search ./zsh-history-substring-search.zsh
@@ -67,6 +65,8 @@ antigen bundle zsh-users/zsh-autosuggestions
 
 # colors for all files!
 antigen bundle trapd00r/zsh-syntax-highlighting-filetypes
+# Syntax highlighting on the readline
+antigen bundle zsh-users/zsh-syntax-highlighting
 
 # dont set a theme, because pure does it all
 # antigen bundle mafredri/zsh-async
@@ -108,36 +108,44 @@ zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 
 source ~/.bash_profile
 
 # NVM auto switch node version from .nvmrc
-autoload -U add-zsh-hook
-load-nvmrc() {
-  local node_version="$(nvm version)"
-  local nvmrc_path="$(nvm_find_nvmrc)"
+# autoload -U add-zsh-hook
+# load-nvmrc() {
+#   local node_version="$(nvm version)"
+#   local nvmrc_path="$(nvm_find_nvmrc)"
 
-  if [ -n "$nvmrc_path" ]; then
-    local nvmrc_node_version=$(nvm version "$(cat "${nvmrc_path}")")
+#   if [ -n "$nvmrc_path" ]; then
+#     local nvmrc_node_version=$(nvm version "$(cat "${nvmrc_path}")")
 
-    if [ "$nvmrc_node_version" = "N/A" ]; then
-      nvm install
-    elif [ "$nvmrc_node_version" != "$node_version" ]; then
-      nvm use
-    fi
-  elif [ "$node_version" != "$(nvm version default)" ]; then
-    echo "Reverting to nvm default version"
-    nvm use default
-  fi
-}
-add-zsh-hook chpwd load-nvmrc
-load-nvmrc
+#     if [ "$nvmrc_node_version" = "N/A" ]; then
+#       nvm install
+#     elif [ "$nvmrc_node_version" != "$node_version" ]; then
+#       nvm use
+#     fi
+#   elif [ "$node_version" != "$(nvm version default)" ]; then
+#     echo "Reverting to nvm default version"
+#     nvm use default
+#   fi
+# }
+# add-zsh-hook chpwd load-nvmrc
+# load-nvmrc
 
 if [ -e /Users/andreasadam/.nix-profile/etc/profile.d/nix.sh ]; then . /Users/andreasadam/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
-
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/andreasadam/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/andreasadam/google-cloud-sdk/path.zsh.inc'; fi
-
-# The next line enables shell command completion for gcloud.
-if [ -f '/Users/andreasadam/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/andreasadam/google-cloud-sdk/completion.zsh.inc'; fi
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# pnpm
+export PNPM_HOME="/Users/andreasadam/Library/pnpm"
+export PATH="$PNPM_HOME:$PATH"
+# pnpm end
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/usr/local/google-cloud-sdk/path.zsh.inc' ]; then . '/usr/local/google-cloud-sdk/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/usr/local/google-cloud-sdk/completion.zsh.inc' ]; then . '/usr/local/google-cloud-sdk/completion.zsh.inc'; fi
+export VOLTA_HOME="$HOME/.volta"
+export PATH="$VOLTA_HOME/bin:$PATH"
+export VOLTA_FEATURE_PNPM=1
