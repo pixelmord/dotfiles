@@ -42,13 +42,11 @@ hash gls >/dev/null 2>&1 || alias gls="ls"
 if gls --color >/dev/null 2>&1; then colorflag="--color"; else colorflag="-G"; fi
 export CLICOLOR_FORCE=1
 
-# ls options: A = include hidden (but not . or ..), F = put `/` after folders, h = byte unit suffixes
-# List all files colorized in long format
-alias l='gls -lFh ${colorflag} --group-directories-first'
-# List all files colorized in long format, including dot files
-alias la='gls -lAFh ${colorflag} --group-directories-first'
+alias l='exa -la --icons --no-user --group-directories-first  --time-style long-iso'
+
+alias la='exa -l --icons --no-user --group-directories-first  --time-style long-iso'
 # List only directories
-alias lsd='ls -l | grep "^d"'
+alias lsd='exa -l --icons --no-user --group-directories-first  --time-style long-iso'
 
 # `cat` with beautiful colors. requires Pygments installed.
 # 							   sudo easy_install Pygments
@@ -126,11 +124,6 @@ alias showdesktop="defaults write com.apple.finder CreateDesktop -bool true && k
 
 # PlistBuddy alias, because sometimes `defaults` just doesn’t cut it
 alias plistbuddy="/usr/libexec/PlistBuddy"
-
-# One of @janmoesen’s ProTip™s
-for method in GET HEAD POST PUT DELETE TRACE OPTIONS; do
-    alias "$method"="lwp-request -m '$method'"
-done
 
 # Update installed Homebrew, npm, and their installed packages
 alias brew_update="brew -v update; brew upgrade; brew cleanup; brew doctor"
