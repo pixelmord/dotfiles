@@ -81,10 +81,6 @@ autocorrect = 1
 default = current
 followTags = true
 
-# use separate file for username / github token / etc
-[include]
-path = ~/.gitconfig.local
-
 #[init]
 #	templatedir = ~/.git_template
 
