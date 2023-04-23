@@ -76,7 +76,7 @@ antigen theme romkatv/powerlevel10k
 # Tell antigen that you're done.
 antigen apply
 
-###
+
 #################################################################################################
 
 # bind UP and DOWN arrow keys for history search

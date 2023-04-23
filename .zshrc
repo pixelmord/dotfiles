@@ -26,7 +26,7 @@ ZSH_THEME="robbyrussell"
 # Uncomment one of the following lines to change the auto-update behavior
 # zstyle ':omz:update' mode disabled  # disable automatic updates
 # zstyle ':omz:update' mode auto      # update automatically without asking
-# zstyle ':omz:update' mode reminder  # just remind me to update when it's time
+zstyle ':omz:update' mode reminder # just remind me to update when it's time
 
 # Uncomment the following line to change how often to auto-update (in days).
 # zstyle ':omz:update' frequency 13
@@ -60,7 +60,32 @@ ZSH_THEME="robbyrussell"
 # "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
 # or set a custom format using the strftime function format specifications,
 # see 'man strftime' for details.
-# HIST_STAMPS="mm/dd/yyyy"
+HIST_STAMPS="dd.mm.yyyy"
+
+# Enable history expansion with space
+# E.g. typing !!<space> will replace the !! with your last command
+type bind &>/dev/null && bind Space:magic-space
+
+# Use standard ISO 8601 timestamp
+# %F equivalent to %Y-%m-%d
+# %T equivalent to %H:%M:%S (24-hours format)
+export HISTTIMEFORMAT='%F %T '
+
+# keep history up to date, across sessions, in realtime
+#  http://unix.stackexchange.com/a/48113
+export HISTCONTROL="erasedups:ignoreboth"     # no duplicate entries
+export HISTSIZE=100000                        # big big history (default is 500)
+export HISTFILESIZE=$HISTSIZE                 # big big history
+type shopt &>/dev/null && shopt -s histappend # append to history, don't overwrite it
+
+# Don't record some commands
+export HISTIGNORE="&:[ ]*:exit:ls:bg:fg:history:clear"
+
+# Save multi-line commands as one command
+type shopt &>/dev/null && shopt -s cmdhist
+
+# Save and reload the history after each command finishes
+export PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND"
 
 # Would you like to use another custom folder than $ZSH/custom?
 # ZSH_CUSTOM=/path/to/new-custom-folder
@@ -70,7 +95,7 @@ ZSH_THEME="robbyrussell"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git)
+plugins=(aliases ag git node npm docker docker-compose docker-machine web-search yarn zsh-autosuggestions zsh-syntax-highlighting command-not-found extract brew z)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -99,8 +124,38 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
-export VOLTA_HOME="$HOME/.volta"
-export PATH="$VOLTA_HOME/bin:$PATH"
+
+#################################################################################################
+
+export PURE_GIT_UNTRACKED_DIRTY=0
+
+# Automatically list directory contents on `cd`.
+auto-ls() {
+  emulate -L zsh
+  # explicit sexy ls'ing as aliases arent honored in here.
+  hash gls >/dev/null 2>&1 && CLICOLOR_FORCE=1 gls -aFh --color --group-directories-first || ls
+}
+chpwd_functions=(auto-ls $chpwd_functions)
+
+# history mgmt
+# http://www.refining-linux.org/archives/49/ZSH-Gem-15-Shared-history/
+setopt inc_append_history
+setopt share_history
+
+zstyle ':completion:*' matcher-list '' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
+
+# Load our dotfiles like ~/.bash_prompt, etc…
+#   ~/.extra can be used for settings you don’t want to commit,
+#   Use it to configure your PATH, thus it being first in line.
+for file in ~/.{path_export,extra,exports,aliases,functions}; do
+  [ -r "$file" ] && source "$file"
+done
+unset file
+
+source "$(brew --prefix)/share/google-cloud-sdk/path.zsh.inc"
+source "$(brew --prefix)/share/google-cloud-sdk/completion.zsh.inc"
+
+# alias for git dotfiles management in home directory
 alias dotfiles='/usr/bin/git --git-dir=/Users/andreasadam/.cfg/ --work-tree=/Users/andreasadam'
 
 eval "$(starship init zsh)"

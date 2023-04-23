@@ -20,8 +20,9 @@ BP=${NP%bin/node} #this replaces the string '/bin/node'
 LP="${BP}lib/node_modules"
 export NODE_PATH="$LP"
 
-export ANDROID_HOME=$HOME/Library/Android/sdk/
-
-export JAVA_HOME=$(/usr/libexec/java_home)
+# export JAVA_HOME=$(/usr/libexec/java_home)
 
 export TEMP=/tmp
+
+export VOLTA_HOME="$HOME/.volta"
+export PATH="$VOLTA_HOME/bin:$PATH"
