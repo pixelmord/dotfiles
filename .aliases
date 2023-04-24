@@ -27,7 +27,6 @@ alias f='open -a Finder'
 alias photoshop="open -a '/Applications/Adobe\ Photoshop\ CC/Adobe\ Photoshop\ CC.app'"
 alias vup="sudo echo .. && vagrant up"
 alias rm=trash
-alias code=code-insiders
 
 # general shortcuts
 alias ws="cd ~/workspace"
