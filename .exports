@@ -6,7 +6,7 @@ export MANPAGER="less -X"
 
 # Prefer US English and use UTF-8
 export LC_ALL="en_US.UTF-8"
-export LANG="en_US"
+export LANG=en_US.UTF-8
 
 export HOMEBREW_CASK_OPTS="--appdir=/Applications"
 
@@ -21,6 +21,12 @@ LP="${BP}lib/node_modules"
 export NODE_PATH="$LP"
 
 # export JAVA_HOME=$(/usr/libexec/java_home)
+
+# Localstack
+export LOCALSTACK_URL=http://localhost:4566
+export TF_VAR_aws_endpoint_url=$LOCALSTACK_URL
+export TF_VAR_is_run_on_localstack=true
+export TF_VAR_aws_profile=localstack
 
 export TEMP=/tmp
 
