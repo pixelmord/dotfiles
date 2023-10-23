@@ -8,11 +8,9 @@ npm i -g apollo-codegen
 npm i -g artillery
 npm i -g aws-cdk
 npm i -g awsmobile-cli
-npm i -g blitz
 npm i -g browser-sync
 npm i -g caprover
 npm i -g create-next-app
-npm i -g create-react-app
 npm i -g degit
 npm i -g diff-so-fancy
 npm i -g dockly
@@ -32,7 +30,6 @@ npm i -g live-server
 npm i -g nativefier
 npm i -g nodemon
 npm i -g npkill
-npm i -g npm
 npm i -g npm-check
 npm i -g prettier
 npm i -g prisma
