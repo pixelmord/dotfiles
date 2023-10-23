@@ -31,6 +31,7 @@ show = diff-so-fancy | less --tabs=4 -RFX
 
 # so much color
 [color]
+pager = true
 ui = auto
 [color "diff"]
 meta = yellow bold
@@ -113,9 +114,6 @@ prompt = false
 [diff]
 tool = Kaleidoscope
 
-[user]
-name = Andreas Adam
-email = andreas.adam@composableweb.com
 [init]
 defaultBranch = main
 [pull]

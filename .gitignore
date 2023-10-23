@@ -27,7 +27,6 @@ Thumbs.db
 .buildpath
 .idea
 
-
 # node stuff
 node_modules
 npm-debug.log
@@ -47,7 +46,6 @@ development.services.yml
 sites/simpletest
 # patches/
 
-
 # DRUPAL Ignore paths that contain user-generated content.
 sites/*/files
 sites/*/private
@@ -56,3 +54,6 @@ sites/*.dev
 
 # tmp files
 *scsslint_tmp*.css
+
+# dotfiles git repo
+.cfg

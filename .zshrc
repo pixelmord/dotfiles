@@ -156,6 +156,6 @@ source "$(brew --prefix)/share/google-cloud-sdk/path.zsh.inc"
 source "$(brew --prefix)/share/google-cloud-sdk/completion.zsh.inc"
 
 # alias for git dotfiles management in home directory
-alias dotfiles='/usr/bin/git --git-dir=/Users/andreasadam/.cfg/ --work-tree=/Users/andreasadam'
+alias dotfiles='/opt/homebrew/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
 
 eval "$(starship init zsh)"
