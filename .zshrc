@@ -95,7 +95,7 @@ export PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(aliases ag git github history jsontools kubectl macos pip python virtualenv node npm docker docker-compose docker-machine web-search yarn zsh-completions zsh-autosuggestions zsh-syntax-highlighting command-not-found extract brew z command-not-found alias-finder colored-man-pages)
+plugins=(aliases ag git github history jsontools kubectl macos pip python virtualenv node npm docker docker-compose docker-machine web-search yarn zsh-completions zsh-autosuggestions zsh-syntax-highlighting command-not-found extract brew z alias-finder colored-man-pages)
 
 source $ZSH/oh-my-zsh.sh
 

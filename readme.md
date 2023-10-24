@@ -1,4 +1,4 @@
-# Pixelmord's dotfiles.
+# Pixelmord's dotfiles
 
 This repo contains my personal dotfiles and are heavily based on [paul](https://github.com/paulirish/dotfiles/), [mathias](https://github.com/mathiasbynens/dotfiles/) and [addy](http://github.com/addyosmani/dotfiles)'s.
 
@@ -7,6 +7,7 @@ This repo contains my personal dotfiles and are heavily based on [paul](https://
 My basic setup is captured in `setup-a-new-machine.sh` . Run commands manually!
 
 ## Copy or Symlink all .dotfiles to your home directory
+
 Skip .git directory !
 
 ## private config
@@ -58,44 +59,44 @@ When setting up a new Mac, you may want to set some sensible OS X defaults:
 ```bash
 ./osx.sh
 ```
+
 See also `setup-a-new-machine.sh`
 
 ## Similar projects
 
 I recommend getting a [`.jshintrc`](https://github.com/jshint/node-jshint/blob/master/.jshintrc) and [`.editorconfig`](http://editorconfig.org/) defined for all your projects.
 
-
-
-
-
 ## overview of files
 
-####  Automatic config
-* `.ackrc` - for ack (better than grep)
-* `.vimrc`, `.vim` - vim config, obv.
+#### Automatic config
+
+- `.ackrc` - for ack (better than grep)
+- `.vimrc`, `.vim` - vim config, obv.
 
 #### shell environement
-* `.aliases`
-* `.bash_profile`
-* `.bash_prompt`
-* `.bashrc`
-* `.exports`
-* `.functions`
-* `.extra` - not included, explained above
+
+- `.aliases`
+- `.bash_profile`
+- `.bash_prompt`
+- `.bashrc`
+- `.exports`
+- `.functions`
+- `.extra` - not included, explained above
 
 #### manual run
-* `install-deps.sh` - random apps i need installed
-* `osx.sh` - run on a fresh osx machine
-* `brew.sh` - homebrew intialization
-* `brew-cask.sh` - homebrew intialization
+
+- `install-deps.sh` - random apps i need installed
+- `osx.sh` - run on a fresh osx machine
+- `brew.sh` - homebrew intialization
+- `brew-cask.sh` - homebrew intialization
 
 #### git, brah
-* `.git`
-* `.gitattributes`
-* `.gitconfig`
-* `.gitignore`
 
-* `.inputrc` - config for bash readline
+- `.git`
+- `.gitattributes`
+- `.gitconfig`
+- `.gitignore`
 
+- `.inputrc` - config for bash readline
 
 ## Installation
