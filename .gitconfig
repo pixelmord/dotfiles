@@ -121,3 +121,11 @@ rebase = false
 # use separate file for username / github token / etc
 [include]
 path = ~/.gitconfig.local
+[user]
+	name = Andreas Adam
+	email = andreas.adam@parcellab.com
+[maintenance]
+	repo = /Users/andreas.adam/workspace/@personal/poolbasecamp
+	repo = /Users/andreas.adam/workspace/@parcellab/portal
+[credential]
+	helper = osxkeychain

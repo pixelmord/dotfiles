@@ -41,11 +41,11 @@ hash gls >/dev/null 2>&1 || alias gls="ls"
 if gls --color >/dev/null 2>&1; then colorflag="--color"; else colorflag="-G"; fi
 export CLICOLOR_FORCE=1
 
-alias l='exa -la --icons --no-user --group-directories-first  --time-style long-iso'
+alias l='eza -la --icons --no-user --group-directories-first  --time-style long-iso'
 
-alias la='exa -l --icons --no-user --group-directories-first  --time-style long-iso'
+alias la='eza -l --icons --no-user --group-directories-first  --time-style long-iso'
 # List only directories
-alias lsd='exa -l --icons --no-user --group-directories-first  --time-style long-iso'
+alias lsd='eza -l --icons --no-user --group-directories-first  --time-style long-iso'
 
 # `cat` with beautiful colors. requires Pygments installed.
 # 							   sudo easy_install Pygments

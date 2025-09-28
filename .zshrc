@@ -95,7 +95,7 @@ export PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(aliases ag git github history jsontools kubectl macos pip python virtualenv node npm docker docker-compose docker-machine web-search yarn zsh-completions zsh-autosuggestions zsh-syntax-highlighting command-not-found extract brew z alias-finder colored-man-pages)
+plugins=(aliases git github history jsontools kubectl macos pip python direnv node npm docker docker-compose web-search zsh-completions zsh-autosuggestions zsh-syntax-highlighting command-not-found extract brew alias-finder colored-man-pages)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -159,3 +159,19 @@ source "$(brew --prefix)/share/google-cloud-sdk/completion.zsh.inc"
 alias dotfiles='/opt/homebrew/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
 
 eval "$(starship init zsh)"
+eval "$(zoxide init zsh)"
+
+# pnpm
+export PNPM_HOME="$HOME/Library/pnpm"
+case ":$PATH:" in
+*":$PNPM_HOME:"*) ;;
+*) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
+
+# Added by Windsurf
+export PATH="$HOME/.codeium/windsurf/bin:$PATH"
+
+# Task Master aliases added on 4/17/2025
+alias tm='task-master'
+alias taskmaster='task-master'
