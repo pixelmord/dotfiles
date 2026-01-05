@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Description: Delete branch locally and on remote
 
 if [[ $# == 0 ]]; then
     echo "Must provide at least one branch"

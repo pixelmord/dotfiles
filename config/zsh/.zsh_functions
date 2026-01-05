@@ -1,10 +1,10 @@
 #!/usr/bin/env zsh
+# Shell functions - sourced by .zshrc
 
 autoload -Uz compinit
 compinit
 
-# directory navigation functions with completion
-# unalias first to avoid conflicts with OMZ or other configs
+# Quick cd to workspace/home with completion
 unalias c h 2>/dev/null
 for func dir in c '$CODE_DIR' h '$HOME'; do
   eval "
@@ -14,19 +14,15 @@ for func dir in c '$CODE_DIR' h '$HOME'; do
   "
 done
 
-
+# Show last modified date of file
 last_modified() {
   ls -lt $1 | head -n 2 | tail -n 1 | awk '{print $6, $7, $8}'
 }
 
-
+# Prepend directory to PATH
 prepend_path() {
   [[ ! -d "$1" ]] && return
-
-  path=(
-    $1
-    $path
-  )
+  path=($1 $path)
 }
 
 # Create directory and cd into it
@@ -34,12 +30,12 @@ take() {
     mkdir -p -- "$1" && cd -P -- "$1"
 }
 
-# Copy with progress using rsync
+# Copy with progress bar (rsync)
 cp_p() {
     rsync -WavP --human-readable --progress "$1" "$2"
 }
 
-# Get gzipped size
+# Show gzipped file size comparison
 gz() {
     local orig=$(wc -c < "$1")
     local gzipped=$(gzip -c "$1" | wc -c)
@@ -48,11 +44,12 @@ gz() {
     echo "ratio:   $(echo "scale=2; $gzipped * 100 / $orig" | bc)%"
 }
 
-# All dig info
+# DNS lookup with all record types
 digga() {
     dig +nocmd "$1" any +multiline +noall +answer
 }
 
+# Lightweight zsh plugin manager
 zfetch() {
   # terminal colors
   local TC='\e[' Rst="\e[0m" Red="\e[31m" Yel="\e[33m" Blu="\e[34m"

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Description: Configure MCP servers for Claude Code
 
 echo -e "🧪 Setting up MCP for GPT-5...\n"
 claude mcp add gpt5-server --scope user -e OPENAI_API_KEY="$OPENAI_API_KEY" -- npx tsx ~/Developer/dotfiles/tools/gpt5-mcp-server/src/index.ts

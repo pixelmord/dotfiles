@@ -1,92 +1,112 @@
 #!/usr/bin/env zsh
+# Shell aliases - sourced by .zshrc
 
-# reload zsh config
+# Reload zsh configuration
 alias reload!="RELOAD=1 source $XDG_CONFIG_HOME/zsh/.zshrc"
 
-# safer file operations
+# Verbose file operations (safer)
 alias mv='mv -v'
+# Verbose copy
 alias cp='cp -v'
+# Use trash instead of rm
 alias rm='trash'
 
-# Filesystem aliases
+# Go up one directory
 alias ..='cd ..'
+# Go up two directories
 alias ...='cd ../..'
+# Go up three directories
 alias ....="cd ../../.."
+# Go up four directories
 alias .....="cd ../../../.."
 
-# Helpers
+# Colored grep output
 alias grep='grep --color=auto'
-alias df='df -h' # disk free, in Gigabytes, not bytes
-alias du='du -h -c' # calculate disk usage for a folder
+# Human-readable disk free
+alias df='df -h'
+# Human-readable disk usage
+alias du='du -h -c'
+# List PATH entries (one per line)
+alias lpath='echo $PATH | tr ":" "\n"'
 
-alias lpath='echo $PATH | tr ":" "\n"' # list the PATH separated by new lines
-
-# Applications
+# Open iOS Simulator
 alias ios='open -a /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app'
 
-# Hide/show all desktop icons (useful when presenting)
+# Hide desktop icons (for presentations)
 alias hidedesktop="defaults write com.apple.finder CreateDesktop -bool false && killall Finder"
+# Show desktop icons
 alias showdesktop="defaults write com.apple.finder CreateDesktop -bool true && killall Finder"
 
-# Recursively delete `.DS_Store` files
+# Delete all .DS_Store files recursively
 alias cleanup="find . -name '*.DS_Store' -type f -ls -delete"
-# remove broken symlinks
+# Remove broken symlinks
 alias clsym="find -L . -name . -o -type d -prune -o -type l -exec rm {} +"
 
-
-# use eza if available
+# Directory listing (uses eza if available)
 if [[ -x "$(command -v eza)" ]]; then
+  # Long listing with git status
   alias ll="eza --icons --git --long"
+  # Long listing including hidden files
   alias l="eza --icons --git --all --long"
 else
   alias l="ls -lah ${colorflag}"
   alias ll="ls -lFh ${colorflag}"
 fi
+# List all files
 alias la="ls -AF ${colorflag}"
+# List directories only
 alias lld="ls -l | grep ^d"
+# Force remove
 alias rmf="rm -rf"
 
-# git aliases
+# Git status (short)
 alias gs='git s'
+# Git log (pretty)
 alias glog="git l"
 
-# tmux aliases
+# Tmux attach to last session
 alias ta='tmux attach'
+# List tmux sessions
 alias tls='tmux ls'
+# Attach to named session
 alias tat='tmux attach -t'
+# New named session
 alias tns='tmux new-session -s'
 
-# use nvim, but don't make me think about it
+# Use neovim as vim
 if [[ -n "$(command -v nvim)" ]]; then
     alias vim="nvim"
-    # shortcut to open vim and immediately update vim-plug and all installed plugins
+    # Update neovim plugins
     alias vimu="nvim --headless \"+Lazy! sync\" +qa"
-    # immediately open to fugitive's status screen
+    # Open neovim with git status
     alias vimg="nvim +Ge:"
 fi
 
+# Claude without permission prompts
 alias claude!="claude --dangerously-skip-permissions"
 
-# clone and cd into repo
+# Clone repo and cd into it
 clone() {
     git clone --depth=1 "$1"
     cd "$(basename "${1%.*}")" || return
 }
 
-# network
+# Get public IP address
 alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
+# Get local IP address
 alias localip="ipconfig getifaddr en0"
+# Flush DNS cache
 alias flush="dscacheutil -flushcache && sudo killall -HUP mDNSResponder"
 
-# npm
+# List npm global packages
 alias nlg="npm list -g --depth=0 2>/dev/null"
+# List npm local packages
 alias nl="npm list --depth=0 2>/dev/null"
 
-# pnpm
+# List pnpm global packages
 alias plg="pnpm list -g"
+# List pnpm local packages
 alias pl="pnpm list"
 
-# clipboard - trim newlines and copy
+# Copy to clipboard (trim newlines)
 alias clip="tr -d '\n' | pbcopy"
-
-# update everything

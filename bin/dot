@@ -5,7 +5,8 @@ trap cleanup SIGINT SIGTERM ERR EXIT
 
 cleanup() {
   trap - SIGINT SIGTERM ERR EXIT
-  tput cnorm 2>/dev/null || true # enable cursor
+  # Only restore cursor in main shell (not subshells)
+  [[ $BASHPID == $$ ]] && tput cnorm 2>/dev/null || true
 }
 
 command_name=$(basename "${BASH_SOURCE[0]}")
@@ -31,6 +32,163 @@ find_commands() {
   done | sort -u
 }
 
+find_utils() {
+  local bin_dir="$DOTFILES/bin"
+  [[ ! -d "$bin_dir" ]] && return
+
+  for cmd in "$bin_dir"/*; do
+    [[ -f "$cmd" && -x "$cmd" ]] || continue
+    local name=$(basename "$cmd")
+    # Skip dot command, dot-* subcommands, and lib directory
+    [[ "$name" == "dot" || "$name" == dot-* || "$name" == "lib" ]] && continue
+    echo "$name"
+  done | sort -u
+}
+
+cmd_help_utils() {
+  fmt_title_underline "Utility Scripts"
+  echo -e "Scripts in \$DOTFILES/bin/ (add to PATH for direct access)\n"
+
+  local bin_dir="$DOTFILES/bin"
+
+  # Group scripts by category based on prefix
+  local -A categories=(
+    ["git"]="Git Utilities"
+    ["tmux"]="Tmux Utilities"
+    ["claude"]="Claude AI Utilities"
+  )
+
+  # Helper to extract description from a script
+  get_script_desc() {
+    local script="$1"
+    local desc=""
+
+    # Try # Description: format first
+    desc=$(grep "^# Description:" "$script" 2>/dev/null | head -1 | cut -d: -f2- | sed 's/^[[:space:]]*//')
+
+    # Fallback: first comment line after shebang (within first 10 lines)
+    if [[ -z "$desc" ]]; then
+      desc=$(head -10 "$script" 2>/dev/null | grep "^#" | grep -v "^#!" | head -1 | sed 's/^#[[:space:]]*//')
+    fi
+
+    # Truncate long descriptions
+    if [[ ${#desc} -gt 50 ]]; then
+      desc="${desc:0:47}..."
+    fi
+
+    echo "${desc:-No description}"
+  }
+
+  # First, show categorized scripts
+  for prefix in git tmux claude; do
+    local found=false
+    local output=""
+
+    for cmd in "$bin_dir"/$prefix-*; do
+      [[ -f "$cmd" && -x "$cmd" ]] || continue
+      found=true
+      local name=$(basename "$cmd")
+      local desc=$(get_script_desc "$cmd")
+      output+="    $(fmt_cmd "$(printf '%-20s' "$name")") $desc\n"
+    done
+
+    if [[ "$found" == true ]]; then
+      echo -e "$(fmt_key "${categories[$prefix]}")"
+      echo -e "$output"
+    fi
+  done
+
+  # Then show uncategorized scripts
+  echo -e "$(fmt_key "Other Utilities")"
+  find_utils | while read -r name; do
+    # Skip if already shown in a category
+    [[ "$name" == git-* || "$name" == tmux-* || "$name" == claude-* ]] && continue
+
+    local cmd="$bin_dir/$name"
+    local desc=$(get_script_desc "$cmd")
+    printf "    $(fmt_cmd "%-20s") %s\n" "$name" "$desc"
+  done
+}
+
+cmd_help_shell() {
+  fmt_title_underline "Shell Aliases & Functions"
+  echo -e "Defined in \$DOTFILES/config/zsh/\n"
+
+  local aliases_file="$DOTFILES/config/zsh/.zsh_aliases"
+  local functions_file="$DOTFILES/config/zsh/.zsh_functions"
+
+  # Parse aliases using grep and sed (more reliable than bash regex)
+  if [[ -f "$aliases_file" ]]; then
+    echo -e "$(fmt_key "Aliases") (from .zsh_aliases)\n"
+
+    local prev_comment=""
+
+    while IFS= read -r line; do
+      # Track comments (lines starting with # but not shebang)
+      if [[ "$line" == \#* && "$line" != \#!* ]]; then
+        prev_comment=$(echo "$line" | sed 's/^#[[:space:]]*//')
+        continue
+      fi
+
+      # Parse alias definitions: alias name='value' or alias name="value"
+      if [[ "$line" == alias\ * ]]; then
+        local alias_def="${line#alias }"
+        local alias_name="${alias_def%%=*}"
+        local alias_value="${alias_def#*=}"
+        # Remove surrounding quotes
+        alias_value=$(echo "$alias_value" | sed "s/^['\"]//;s/['\"]$//")
+
+        # Truncate long values
+        if [[ ${#alias_value} -gt 40 ]]; then
+          alias_value="${alias_value:0:37}..."
+        fi
+
+        # Use previous comment as description, or show the alias value
+        local desc="${prev_comment:-→ $alias_value}"
+
+        printf "    $(fmt_cmd "%-12s") %s\n" "$alias_name" "$desc"
+        prev_comment=""
+      elif [[ -n "$line" && "$line" != \#* ]]; then
+        # Reset comment on non-alias, non-comment lines
+        prev_comment=""
+      fi
+    done < "$aliases_file"
+    echo
+  fi
+
+  # Parse functions
+  if [[ -f "$functions_file" ]]; then
+    echo -e "$(fmt_key "Functions") (from .zsh_functions)\n"
+
+    local prev_comment=""
+
+    while IFS= read -r line; do
+      # Track comments
+      if [[ "$line" == \#* && "$line" != \#!* ]]; then
+        prev_comment=$(echo "$line" | sed 's/^#[[:space:]]*//')
+        continue
+      fi
+
+      # Parse function definitions: name() { or name() or function name
+      local func_name=""
+      if [[ "$line" == *"()"* ]]; then
+        func_name=$(echo "$line" | sed 's/().*//' | sed 's/^[[:space:]]*//')
+      elif [[ "$line" == function\ * ]]; then
+        func_name=$(echo "$line" | sed 's/^function[[:space:]]*//' | sed 's/[[:space:]].*//')
+      fi
+
+      if [[ -n "$func_name" && "$func_name" != _* ]]; then
+        local desc="${prev_comment:-No description}"
+        printf "    $(fmt_cmd "%-12s") %s\n" "$func_name" "$desc"
+        prev_comment=""
+      elif [[ -n "$line" && "$line" != \#* && "$line" != \ * && "$line" != $'\t'* ]]; then
+        # Reset comment on non-function, non-comment, non-indented lines
+        prev_comment=""
+      fi
+    done < "$functions_file"
+  fi
+}
+
 usage() {
   cat <<EOF
   $(fmt_key "Usage:") $(fmt_cmd "$command_name") $(fmt_value "<command> [subcommand] [options]")
@@ -39,6 +197,8 @@ Dotfiles management script.
 
 $(fmt_key "Available Commands:")
     help                          Show this help message
+        utils                     List utility scripts in bin/
+        shell                     List shell aliases and functions
     clean                         Clean up broken symlinks
     backup                        Backup dotfiles and system state
         full                      Full backup (all options below)
@@ -628,7 +788,17 @@ main() {
 
   case "$cmd" in
   help)
-    usage
+    case "${1:-}" in
+    utils)
+      cmd_help_utils
+      ;;
+    shell)
+      cmd_help_shell
+      ;;
+    *)
+      usage
+      ;;
+    esac
     ;;
   clean)
     cmd_clean "$@"

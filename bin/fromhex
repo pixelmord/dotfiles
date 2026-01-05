@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Description: Convert hex color to RGB values
 
 hex=${1#"#"}
 r=$(printf '0x%0.2s' "$hex")

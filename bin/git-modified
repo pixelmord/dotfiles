@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
+# Description: Show files sorted by last modification date
 
 git ls-files | xargs -I{} git log -1 --format="%ai {}" {}

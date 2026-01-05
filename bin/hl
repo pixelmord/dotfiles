@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Description: Syntax highlight file contents (bat wrapper)
 
 set -Eeuo pipefail
 trap cleanup SIGINT SIGTERM ERR EXIT

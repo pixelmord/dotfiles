@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Description: Run targeted tests with optional coverage
 
 set -Eeuo pipefail
 trap cleanup SIGINT SIGTERM ERR EXIT

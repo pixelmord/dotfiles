@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Description: Clone a repository as a bare repo for worktree workflow
 
 set -Eeuo pipefail
 trap cleanup SIGINT SIGTERM ERR EXIT
