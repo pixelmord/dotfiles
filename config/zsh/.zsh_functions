@@ -4,6 +4,8 @@ autoload -Uz compinit
 compinit
 
 # directory navigation functions with completion
+# unalias first to avoid conflicts with OMZ or other configs
+unalias c h 2>/dev/null
 for func dir in c '$CODE_DIR' h '$HOME'; do
   eval "
   $func() { cd $dir/\$1 }
@@ -25,6 +27,30 @@ prepend_path() {
     $1
     $path
   )
+}
+
+# Create directory and cd into it
+take() {
+    mkdir -p -- "$1" && cd -P -- "$1"
+}
+
+# Copy with progress using rsync
+cp_p() {
+    rsync -WavP --human-readable --progress "$1" "$2"
+}
+
+# Get gzipped size
+gz() {
+    local orig=$(wc -c < "$1")
+    local gzipped=$(gzip -c "$1" | wc -c)
+    echo "orig:    $orig bytes"
+    echo "gzipped: $gzipped bytes"
+    echo "ratio:   $(echo "scale=2; $gzipped * 100 / $orig" | bc)%"
+}
+
+# All dig info
+digga() {
+    dig +nocmd "$1" any +multiline +noall +answer
 }
 
 zfetch() {

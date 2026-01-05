@@ -180,3 +180,14 @@
 [rebase]
     instructionFormat = "[%an - %ar] %s"
     autoStash = true
+[rerere]
+    enabled = true
+[stash]
+    showPatch = true
+[fetch]
+    prune = true
+[filter "lfs"]
+    clean = git-lfs clean -- %f
+    smudge = git-lfs smudge -- %f
+    required = true
+    process = git-lfs filter-process

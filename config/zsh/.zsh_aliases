@@ -3,6 +3,11 @@
 # reload zsh config
 alias reload!="RELOAD=1 source $XDG_CONFIG_HOME/zsh/.zshrc"
 
+# safer file operations
+alias mv='mv -v'
+alias cp='cp -v'
+alias rm='trash'
+
 # Filesystem aliases
 alias ..='cd ..'
 alias ...='cd ../..'
@@ -61,3 +66,27 @@ if [[ -n "$(command -v nvim)" ]]; then
 fi
 
 alias claude!="claude --dangerously-skip-permissions"
+
+# clone and cd into repo
+clone() {
+    git clone --depth=1 "$1"
+    cd "$(basename "${1%.*}")" || return
+}
+
+# network
+alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
+alias localip="ipconfig getifaddr en0"
+alias flush="dscacheutil -flushcache && sudo killall -HUP mDNSResponder"
+
+# npm
+alias nlg="npm list -g --depth=0 2>/dev/null"
+alias nl="npm list --depth=0 2>/dev/null"
+
+# pnpm
+alias plg="pnpm list -g"
+alias pl="pnpm list"
+
+# clipboard - trim newlines and copy
+alias clip="tr -d '\n' | pbcopy"
+
+# update everything

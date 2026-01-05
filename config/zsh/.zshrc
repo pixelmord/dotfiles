@@ -70,7 +70,7 @@ zstyle ':omz:update' mode reminder  # just remind me to update when it's time
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git)
+plugins=(git direnv docker docker-compose extract)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -111,6 +111,64 @@ source $ZSH/oh-my-zsh.sh
 # initialize autocomplete
 autoload -U compinit add-zsh-hook
 compinit
+
+# shell options
+export REPORTTIME=10             # show duration for commands >10s
+export KEYTIMEOUT=1              # 10ms delay for key sequences (faster vi mode)
+
+setopt NO_BG_NICE                # don't nice background jobs
+setopt NO_HUP                    # don't kill background jobs on exit
+setopt NO_LIST_BEEP              # no beep on ambiguous completion
+setopt LOCAL_OPTIONS
+setopt LOCAL_TRAPS
+setopt PROMPT_SUBST
+setopt COMPLETE_ALIASES
+
+# history settings
+HIST_STAMPS="yyyy-mm-dd"
+setopt EXTENDED_HISTORY          # write history in ":start:elapsed;command" format
+setopt INC_APPEND_HISTORY        # write to history immediately
+setopt SHARE_HISTORY             # share history between sessions
+setopt HIST_IGNORE_ALL_DUPS      # remove older duplicate entries
+setopt HIST_REDUCE_BLANKS        # remove superfluous blanks
+setopt HIST_IGNORE_SPACE         # ignore commands starting with space
+
+# keybindings - terminal navigation
+bindkey "^[[1;5C" forward-word                    # Ctrl-right
+bindkey "^[[1;5D" backward-word                   # Ctrl-left
+bindkey '^[^[[C' forward-word
+bindkey '^[^[[D' backward-word
+bindkey '^[[1;3D' beginning-of-line               # Alt-left
+bindkey '^[[1;3C' end-of-line                     # Alt-right
+bindkey '^[[5D' beginning-of-line
+bindkey '^[[5C' end-of-line
+bindkey '^?' backward-delete-char
+
+# delete key handling
+if [[ -n "${terminfo[kdch1]}" ]]; then
+  bindkey "${terminfo[kdch1]}" delete-char
+else
+  for key in "^[[3~" "^[3;5~" "\e[3~"; do
+    bindkey "$key" delete-char
+  done
+fi
+
+# vi mode bindings
+bindkey "^A" vi-beginning-of-line
+bindkey -M viins "^F" vi-forward-word
+bindkey -M viins "^E" vi-add-eol
+bindkey "^J" history-beginning-search-forward
+bindkey "^K" history-beginning-search-backward
+
+# completion settings
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'                    # case insensitive
+zstyle ':completion:*' insert-tab pending                              # pasting with tabs doesn't complete
+zstyle ':completion:*' completer _expand _complete _files _correct _approximate
+zstyle ':completion:*' verbose yes
+zstyle ':completion:*:descriptions' format '%B%d%b'
+zstyle ':completion:*:messages' format '%d'
+zstyle ':completion:*:warnings' format 'No matches for: %d'
+zstyle ':completion:*' group-name ''
 
 # source local and config files
 for file in $ZDOTDIR/.zsh_{exports,aliases,functions}; do
