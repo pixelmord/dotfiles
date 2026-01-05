@@ -5,8 +5,7 @@ trap cleanup SIGINT SIGTERM ERR EXIT
 
 cleanup() {
   trap - SIGINT SIGTERM ERR EXIT
-  tput cnorm # enable cursor
-  # script cleanup here
+  tput cnorm 2>/dev/null || true # enable cursor
 }
 
 command_name=$(basename "${BASH_SOURCE[0]}")
@@ -246,7 +245,7 @@ backup_repos() {
 
     echo "$repo_name|$remote_url" >> "$repo_file"
     [[ "$verbose" == true ]] && log_info "  $repo_name: $remote_url"
-    ((count++))
+    count=$((count + 1))
   done < <(find "$workspace" -maxdepth 3 -name ".git" -type d -print0 2>/dev/null)
 
   log_success "Found $count repositories"
@@ -379,8 +378,9 @@ backup_config() {
     done < <(find "$DOTFILES/home" -type f -print0)
   fi
 
-  local tmpfile=$(mktemp)
-  trap 'rm -f "$tmpfile"' RETURN
+  local tmpfile
+  tmpfile=$(mktemp)
+  trap "rm -f '$tmpfile'" RETURN
 
   for file in "${config_files[@]}"; do
     local src_path="${HOME}/${file}"
