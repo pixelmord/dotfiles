@@ -1,0 +1,13 @@
+export VOLTA_HOME="$HOME/.volta"
+
+export CVXOPT_SUITESPARSE_INC_DIR="$(brew --prefix suite-sparse)/include/suitesparse"
+export CVXOPT_SUITESPARSE_LIB_DIR="$(brew --prefix suite-sparse)/lib"
+export CVXOPT_BLAS_LIB_DIR="$(brew --prefix openblas)/lib"
+export CVXOPT_BLAS_LIB="openblas"
+export CVXOPT_GLPK_INC_DIR="$(brew --prefix glpk)/include"
+export CVXOPT_GLPK_LIB_DIR="$(brew --prefix glpk)/lib"
+export CVXOPT_GLPK_LIB="glpk"
+export CVXOPT_BUILD_GLPK=1
+export CPPFLAGS="-I$(brew --prefix suite-sparse)/include/suitesparse ${CPPFLAGS}"
+export LDFLAGS="-L$(brew --prefix suite-sparse)/lib -L$(brew --prefix openblas)/lib ${LDFLAGS}"
+export PKG_CONFIG_PATH="/opt/homebrew/opt/libpq/lib/pkgconfig"

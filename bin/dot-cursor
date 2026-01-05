@@ -1,0 +1,594 @@
+#!/usr/bin/env bash
+# Description: Manage Cursor editor extensions.
+
+set -Eeuo pipefail
+
+# source helpers
+source "$DOTFILES/bin/lib/common.sh"
+command_name=$(basename "${BASH_SOURCE[0]}")
+
+# Default extensions file location
+EXTENSIONS_FILE="${DOTFILES:-$(pwd)}/cursor-extensions.txt"
+
+usage() {
+  cat <<EOF
+  $(fmt_key "Usage:") $(fmt_key "$command_name") $(fmt_value "[options] <command>")
+
+  Manage Cursor editor extensions. This script can install, list, and manage
+  extensions for the Cursor editor.
+
+  $(fmt_key "Commands:")
+    install                    Install extensions from the extensions file
+    install <extension-id>     Install a specific extension by ID
+    list                       List all installed extensions
+    list-available             List extensions in the extensions file
+    uninstall <extension-id>   Uninstall a specific extension
+    sync                       Sync installed extensions with extensions file
+    add <extension-id>         Add an extension ID to the extensions file
+    remove <extension-id>      Remove an extension ID from the extensions file
+
+  $(fmt_key "Options:")
+    -f, --file <path>          Use a custom extensions file (default: cursor-extensions.txt)
+    -v, --verbose              Show detailed output
+    -h, --help                 Show this help message
+EOF
+}
+
+check_cursor() {
+  if ! command -v cursor &>/dev/null; then
+    log_error "Cursor command not found. Please install Cursor and add it to your PATH."
+    log_info "You can install the 'cursor' command from Cursor:"
+    log_info "  Open Cursor → Command Palette (Cmd+Shift+P) → 'Shell Command: Install cursor command in PATH'"
+    exit 1
+  fi
+}
+
+get_installed_extensions() {
+  cursor --list-extensions 2>/dev/null || echo ""
+}
+
+extension_installed() {
+  local ext_id="$1"
+  get_installed_extensions | grep -q "^${ext_id}$" 2>/dev/null
+}
+
+read_extensions_file() {
+  local file="$1"
+  if [[ ! -f "$file" ]]; then
+    log_warning "Extensions file not found: $file"
+    return 1
+  fi
+
+  # Read file, skip lines starting with #, remove inline comments, skip empty lines, trim whitespace
+  grep -v '^[[:space:]]*#' "$file" | sed 's/#.*$//' | grep -v '^[[:space:]]*$' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || true
+}
+
+install_extension() {
+  local ext_id="$1"
+  local verbose="${2:-false}"
+
+  if extension_installed "$ext_id"; then
+    [[ "$verbose" == "true" ]] && log_info "Extension already installed: $ext_id"
+    return 0
+  fi
+
+  [[ "$verbose" == "true" ]] && log_info "Installing extension: $ext_id"
+  
+  if cursor --install-extension "$ext_id" &>/dev/null; then
+    log_success "Installed: $ext_id"
+    return 0
+  else
+    log_error "Failed to install: $ext_id"
+    return 1
+  fi
+}
+
+uninstall_extension() {
+  local ext_id="$1"
+  local verbose="${2:-false}"
+
+  if ! extension_installed "$ext_id"; then
+    [[ "$verbose" == "true" ]] && log_warning "Extension not installed: $ext_id"
+    return 0
+  fi
+
+  [[ "$verbose" == "true" ]] && log_info "Uninstalling extension: $ext_id"
+  
+  if cursor --uninstall-extension "$ext_id" &>/dev/null; then
+    log_success "Uninstalled: $ext_id"
+    return 0
+  else
+    log_error "Failed to uninstall: $ext_id"
+    return 1
+  fi
+}
+
+cmd_install() {
+  local verbose=false
+  local extensions_file="$EXTENSIONS_FILE"
+  local extension_id=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+    -v | --verbose)
+      verbose=true
+      shift
+      ;;
+    -f | --file)
+      if [[ -n "${2:-}" ]]; then
+        extensions_file="$2"
+        shift 2
+      else
+        log_error "Missing file path"
+        exit 1
+      fi
+      ;;
+    *)
+      if [[ -z "$extension_id" ]]; then
+        extension_id="$1"
+      else
+        log_error "Unknown argument: $1"
+        exit 1
+      fi
+      shift
+      ;;
+    esac
+  done
+
+  check_cursor
+
+  if [[ -n "$extension_id" ]]; then
+    # Install single extension
+    fmt_title_underline "Installing extension: $extension_id"
+    install_extension "$extension_id" "$verbose"
+  else
+    # Install from file
+    fmt_title_underline "Installing extensions from file"
+    
+    # Resolve full path
+    if [[ ! "$extensions_file" =~ ^/ ]]; then
+      extensions_file="${DOTFILES:-$(pwd)}/$extensions_file"
+    fi
+    
+    if [[ ! -f "$extensions_file" ]]; then
+      log_error "Extensions file not found: $extensions_file"
+      log_info "DOTFILES: ${DOTFILES:-not set}"
+      log_info "Current dir: $(pwd)"
+      log_info "Create a file with extension IDs (one per line) or use: $command_name add <extension-id>"
+      exit 1
+    fi
+    
+    [[ "$verbose" == "true" ]] && log_info "Using extensions file: $extensions_file"
+
+    # Read extensions into array, handling errors properly
+    local extensions=()
+    local temp_file
+    temp_file=$(mktemp)
+    trap "rm -f '$temp_file'" EXIT
+    
+    if ! read_extensions_file "$extensions_file" > "$temp_file" 2>&1; then
+      log_error "Failed to read extensions file: $extensions_file"
+      [[ -s "$temp_file" ]] && log_error "Error: $(cat "$temp_file")"
+      rm -f "$temp_file"
+      return 1
+    fi
+    
+    # Read into array line by line to avoid process substitution issues
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      [[ -n "$line" ]] && extensions+=("$line")
+    done < "$temp_file"
+    
+    rm -f "$temp_file"
+    trap - EXIT
+    
+    if [[ ${#extensions[@]} -eq 0 ]]; then
+      log_warning "No extensions found in file: $extensions_file"
+      return 0
+    fi
+
+    log_info "Found ${#extensions[@]} extension(s) in file"
+
+    local installed_count=0
+    local failed_count=0
+    local skipped_count=0
+    local processed_count=0
+
+    # Disable exit on error for the loop (we handle errors manually)
+    set +e
+    for ext in "${extensions[@]}"; do
+      # Skip empty entries
+      [[ -z "$ext" ]] && continue
+      
+      ((processed_count++)) || true
+      [[ "$verbose" == "true" ]] && log_info "Processing [$processed_count/${#extensions[@]}]: $ext"
+      
+      # Check if already installed (with error handling)
+      if extension_installed "$ext" 2>/dev/null; then
+        [[ "$verbose" == "true" ]] && log_info "  → Already installed: $ext"
+        ((skipped_count++)) || true
+        continue
+      fi
+      
+      # Try to install
+      [[ "$verbose" == "true" ]] && log_info "  → Installing: $ext"
+      
+      local install_output
+      install_output=$(cursor --install-extension "$ext" 2>&1)
+      local install_status=$?
+      
+      if [[ $install_status -eq 0 ]]; then
+        log_success "Installed: $ext"
+        ((installed_count++)) || true
+      else
+        log_error "Failed to install: $ext"
+        [[ "$verbose" == "true" && -n "$install_output" ]] && log_error "  Error: $install_output"
+        ((failed_count++)) || true
+      fi
+    done
+    # Re-enable exit on error
+    set -e
+
+    echo
+    log_info "Summary:"
+    log_info "  Processed: $processed_count"
+    if [[ $installed_count -gt 0 ]]; then
+      log_success "  Installed: $installed_count extension(s)"
+    fi
+    if [[ $skipped_count -gt 0 ]]; then
+      log_info "  Skipped (already installed): $skipped_count extension(s)"
+    fi
+    if [[ $failed_count -gt 0 ]]; then
+      log_warning "  Failed: $failed_count extension(s)"
+    fi
+    if [[ $processed_count -eq 0 ]]; then
+      log_warning "No extensions were processed"
+    fi
+  fi
+}
+
+cmd_list() {
+  check_cursor
+
+  fmt_title_underline "Installed Cursor Extensions"
+  
+  local installed
+  installed=$(get_installed_extensions)
+  
+  if [[ -z "$installed" ]]; then
+    log_info "No extensions installed"
+    return 0
+  fi
+
+  echo "$installed" | while read -r ext; do
+    echo "  $(fmt_cmd "$ext")"
+  done
+  
+  local count
+  count=$(echo "$installed" | wc -l | tr -d ' ')
+  echo
+  log_info "Total: $count extension(s)"
+}
+
+cmd_list_available() {
+  local extensions_file="$EXTENSIONS_FILE"
+  local verbose=false
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+    -f | --file)
+      if [[ -n "${2:-}" ]]; then
+        extensions_file="$2"
+        shift 2
+      else
+        log_error "Missing file path"
+        exit 1
+      fi
+      ;;
+    -v | --verbose)
+      verbose=true
+      shift
+      ;;
+    *)
+      log_error "Unknown argument: $1"
+      exit 1
+      ;;
+    esac
+  done
+
+  fmt_title_underline "Extensions in file: $(basename "$extensions_file")"
+  
+  if [[ ! -f "$extensions_file" ]]; then
+    log_warning "Extensions file not found: $extensions_file"
+    return 1
+  fi
+
+  local extensions
+  readarray -t extensions < <(read_extensions_file "$extensions_file")
+  
+  if [[ ${#extensions[@]} -eq 0 ]]; then
+    log_info "No extensions in file"
+    return 0
+  fi
+
+  check_cursor
+  local installed_extensions
+  installed_extensions=$(get_installed_extensions)
+
+  for ext in "${extensions[@]}"; do
+    if echo "$installed_extensions" | grep -q "^${ext}$" 2>/dev/null; then
+      echo "  $(fmt_cmd "$ext") $(fmt_value "[installed]")"
+    else
+      echo "  $(fmt_cmd "$ext")"
+    fi
+  done
+  
+  echo
+  log_info "Total: ${#extensions[@]} extension(s) in file"
+}
+
+cmd_uninstall() {
+  local verbose=false
+  local extension_id=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+    -v | --verbose)
+      verbose=true
+      shift
+      ;;
+    *)
+      if [[ -z "$extension_id" ]]; then
+        extension_id="$1"
+      else
+        log_error "Unknown argument: $1"
+        exit 1
+      fi
+      shift
+      ;;
+    esac
+  done
+
+  if [[ -z "$extension_id" ]]; then
+    log_error "Extension ID required"
+    exit 1
+  fi
+
+  check_cursor
+
+  fmt_title_underline "Uninstalling extension: $extension_id"
+  uninstall_extension "$extension_id" "$verbose"
+}
+
+cmd_sync() {
+  local extensions_file="$EXTENSIONS_FILE"
+  local verbose=false
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+    -f | --file)
+      if [[ -n "${2:-}" ]]; then
+        extensions_file="$2"
+        shift 2
+      else
+        log_error "Missing file path"
+        exit 1
+      fi
+      ;;
+    -v | --verbose)
+      verbose=true
+      shift
+      ;;
+    *)
+      log_error "Unknown argument: $1"
+      exit 1
+      ;;
+    esac
+  done
+
+  check_cursor
+
+  fmt_title_underline "Syncing extensions with file"
+
+  if [[ ! -f "$extensions_file" ]]; then
+    log_error "Extensions file not found: $extensions_file"
+    exit 1
+  fi
+
+  local extensions
+  readarray -t extensions < <(read_extensions_file "$extensions_file")
+  
+  if [[ ${#extensions[@]} -eq 0 ]]; then
+    log_warning "No extensions found in file"
+    return 0
+  fi
+
+  local installed_extensions
+  installed_extensions=$(get_installed_extensions)
+
+  local installed_count=0
+  local failed_count=0
+  local skipped_count=0
+
+  for ext in "${extensions[@]}"; do
+    if echo "$installed_extensions" | grep -q "^${ext}$" 2>/dev/null; then
+      [[ "$verbose" == "true" ]] && log_info "Already installed: $ext"
+      ((skipped_count++))
+    else
+      if install_extension "$ext" "$verbose"; then
+        ((installed_count++))
+      else
+        ((failed_count++))
+      fi
+    fi
+  done
+
+  echo
+  log_success "Installed $installed_count extension(s)"
+  [[ $skipped_count -gt 0 ]] && log_info "Skipped $skipped_count already installed extension(s)"
+  [[ $failed_count -gt 0 ]] && log_warning "Failed to install $failed_count extension(s)"
+}
+
+cmd_add() {
+  local extensions_file="$EXTENSIONS_FILE"
+  local extension_id=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+    -f | --file)
+      if [[ -n "${2:-}" ]]; then
+        extensions_file="$2"
+        shift 2
+      else
+        log_error "Missing file path"
+        exit 1
+      fi
+      ;;
+    *)
+      if [[ -z "$extension_id" ]]; then
+        extension_id="$1"
+      else
+        log_error "Unknown argument: $1"
+        exit 1
+      fi
+      shift
+      ;;
+    esac
+  done
+
+  if [[ -z "$extension_id" ]]; then
+    log_error "Extension ID required"
+    exit 1
+  fi
+
+  # Create file if it doesn't exist
+  if [[ ! -f "$extensions_file" ]]; then
+    touch "$extensions_file"
+    log_info "Created extensions file: $extensions_file"
+  fi
+
+  # Check if extension already in file
+  if grep -q "^${extension_id}$" "$extensions_file" 2>/dev/null; then
+    log_warning "Extension already in file: $extension_id"
+    return 0
+  fi
+
+  # Add extension to file
+  echo "$extension_id" >> "$extensions_file"
+  log_success "Added extension to file: $extension_id"
+}
+
+cmd_remove() {
+  local extensions_file="$EXTENSIONS_FILE"
+  local extension_id=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+    -f | --file)
+      if [[ -n "${2:-}" ]]; then
+        extensions_file="$2"
+        shift 2
+      else
+        log_error "Missing file path"
+        exit 1
+      fi
+      ;;
+    *)
+      if [[ -z "$extension_id" ]]; then
+        extension_id="$1"
+      else
+        log_error "Unknown argument: $1"
+        exit 1
+      fi
+      shift
+      ;;
+    esac
+  done
+
+  if [[ -z "$extension_id" ]]; then
+    log_error "Extension ID required"
+    exit 1
+  fi
+
+  if [[ ! -f "$extensions_file" ]]; then
+    log_error "Extensions file not found: $extensions_file"
+    exit 1
+  fi
+
+  # Remove extension from file
+  if grep -q "^${extension_id}$" "$extensions_file" 2>/dev/null; then
+    # Use sed to remove the line (works on both macOS and Linux)
+    if [[ "$(uname)" == "Darwin" ]]; then
+      sed -i '' "/^${extension_id}$/d" "$extensions_file"
+    else
+      sed -i "/^${extension_id}$/d" "$extensions_file"
+    fi
+    log_success "Removed extension from file: $extension_id"
+  else
+    log_warning "Extension not found in file: $extension_id"
+  fi
+}
+
+main() {
+  local subcmd=""
+  local verbose=false
+
+  if [ $# -lt 1 ]; then
+    usage
+    exit 0
+  fi
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    -v | --verbose)
+      verbose=true
+      shift
+      ;;
+    *)
+      if [[ -z "$subcmd" ]]; then
+        subcmd="$1"
+      else
+        # Pass remaining args to command
+        break
+      fi
+      shift
+      ;;
+    esac
+  done
+
+  case "$subcmd" in
+  install)
+    cmd_install "$@"
+    ;;
+  list)
+    cmd_list
+    ;;
+  list-available)
+    cmd_list_available "$@"
+    ;;
+  uninstall)
+    cmd_uninstall "$@"
+    ;;
+  sync)
+    cmd_sync "$@"
+    ;;
+  add)
+    cmd_add "$@"
+    ;;
+  remove)
+    cmd_remove "$@"
+    ;;
+  *)
+    log_error "Unknown command: $subcmd"
+    echo
+    usage
+    exit 1
+    ;;
+  esac
+}
+
+main "$@"
+
