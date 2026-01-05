@@ -41,8 +41,15 @@ Dotfiles management script.
 $(fmt_key "Available Commands:")
     help                          Show this help message
     clean                         Clean up broken symlinks
-    backup                        Backup dotfiles
-        -d, --directory <dir>   Backup directory (default: ~/dotfiles-backup)
+    backup                        Backup dotfiles and system state
+        full                      Full backup (all options below)
+        config                    Backup config files only (default)
+        packages                  Export brew/npm/pnpm package lists
+        repos                     Export git repos from workspace
+        secrets                   Backup secrets (.ssh, .gnupg, .aws, etc.)
+        apps                      Backup app settings (Raycast, Cursor)
+        -d, --directory <dir>     Backup directory (default: ~/dotfiles-backup)
+        -v, --verbose             Show detailed output
     link                          Link dotfiles packages to their respective locations
         all                       Link all
         <pkg>                     Link a specific package
@@ -105,7 +112,10 @@ cmd_clean() {
 cmd_backup() {
   local backup_dir="$HOME/dotfiles-backup"
   local verbose=false
+  local subcmd="config"
+  local args=()
 
+  # Parse arguments
   while [[ $# -gt 0 ]]; do
     case "$1" in
     -d | --directory)
@@ -121,6 +131,10 @@ cmd_backup() {
       verbose=true
       shift
       ;;
+    full | config | packages | repos | secrets | apps)
+      subcmd="$1"
+      shift
+      ;;
     *)
       log_error "Unknown argument: $1"
       exit 1
@@ -130,13 +144,214 @@ cmd_backup() {
 
   # Expand ~ in backup_dir
   backup_dir="${backup_dir/#\~/$HOME}"
-
   local timestamp=$(date +%Y%m%d_%H%M%S)
-  local backup_path="${backup_dir}/dotfiles_backup_${timestamp}"
+  local backup_path="${backup_dir}/backup_${timestamp}"
 
-  log_info "Creating backup in: $backup_path"
+  # Create backup directory
+  mkdir -p "$backup_path"
 
-  files_to_backup=(
+  case "$subcmd" in
+  full)
+    backup_packages "$backup_path" "$verbose"
+    backup_repos "$backup_path" "$verbose"
+    backup_secrets "$backup_path" "$verbose"
+    backup_apps "$backup_path" "$verbose"
+    backup_config "$backup_path" "$verbose"
+    ;;
+  config)
+    backup_config "$backup_path" "$verbose"
+    ;;
+  packages)
+    backup_packages "$backup_path" "$verbose"
+    ;;
+  repos)
+    backup_repos "$backup_path" "$verbose"
+    ;;
+  secrets)
+    backup_secrets "$backup_path" "$verbose"
+    ;;
+  apps)
+    backup_apps "$backup_path" "$verbose"
+    ;;
+  esac
+
+  echo
+  log_success "Backup completed: $backup_path"
+  ls -lh "$backup_path"
+}
+
+backup_packages() {
+  local backup_path="$1"
+  local verbose="$2"
+
+  fmt_title_underline "Exporting package lists"
+
+  # Homebrew
+  if command -v brew &>/dev/null; then
+    log_info "Exporting Homebrew packages..."
+    brew leaves > "$backup_path/brew-leaves.txt"
+    brew list --cask > "$backup_path/brew-casks.txt" 2>/dev/null || true
+    [[ "$verbose" == true ]] && log_info "  $(wc -l < "$backup_path/brew-leaves.txt") formulae, $(wc -l < "$backup_path/brew-casks.txt") casks"
+  fi
+
+  # npm global packages
+  if command -v npm &>/dev/null; then
+    log_info "Exporting npm global packages..."
+    npm list -g --depth=0 --json 2>/dev/null | jq -r '.dependencies | keys[]' > "$backup_path/npm-global.txt" 2>/dev/null || true
+    [[ "$verbose" == true ]] && [[ -f "$backup_path/npm-global.txt" ]] && log_info "  $(wc -l < "$backup_path/npm-global.txt") packages"
+  fi
+
+  # pnpm global packages
+  if command -v pnpm &>/dev/null; then
+    log_info "Exporting pnpm global packages..."
+    pnpm list -g --depth=0 2>/dev/null | tail -n +2 > "$backup_path/pnpm-global.txt" || true
+    [[ "$verbose" == true ]] && [[ -f "$backup_path/pnpm-global.txt" ]] && log_info "  $(wc -l < "$backup_path/pnpm-global.txt") packages"
+  fi
+
+  # Python packages (if using uv or pip)
+  if command -v uv &>/dev/null; then
+    log_info "Exporting uv tools..."
+    uv tool list 2>/dev/null > "$backup_path/uv-tools.txt" || true
+  elif command -v pip &>/dev/null; then
+    log_info "Exporting pip packages..."
+    pip list --user --format=freeze 2>/dev/null > "$backup_path/pip-user.txt" || true
+  fi
+
+  log_success "Package lists exported"
+}
+
+backup_repos() {
+  local backup_path="$1"
+  local verbose="$2"
+  local workspace="${CODE_DIR:-$HOME/workspace}"
+
+  fmt_title_underline "Exporting git repositories"
+
+  if [[ ! -d "$workspace" ]]; then
+    log_warning "Workspace directory not found: $workspace"
+    return
+  fi
+
+  log_info "Scanning $workspace for git repos..."
+
+  local repo_file="$backup_path/git-repos.txt"
+  local count=0
+
+  : > "$repo_file"  # truncate file
+
+  while IFS= read -r -d '' git_dir; do
+    local repo_dir=$(dirname "$git_dir")
+    local repo_name=$(basename "$repo_dir")
+    local remote_url=$(git -C "$repo_dir" remote get-url origin 2>/dev/null || echo "no remote")
+
+    echo "$repo_name|$remote_url" >> "$repo_file"
+    [[ "$verbose" == true ]] && log_info "  $repo_name: $remote_url"
+    ((count++))
+  done < <(find "$workspace" -maxdepth 3 -name ".git" -type d -print0 2>/dev/null)
+
+  log_success "Found $count repositories"
+}
+
+backup_secrets() {
+  local backup_path="$1"
+  local verbose="$2"
+  local secrets_dir="$backup_path/secrets"
+
+  fmt_title_underline "Backing up secrets and credentials"
+
+  mkdir -p "$secrets_dir"
+
+  # Files to backup (only if they exist and are not symlinks)
+  local secret_files=(
+    ".ssh"
+    ".gnupg"
+    ".aws"
+    ".gitconfig.local"
+    ".npmrc"
+    ".netrc"
+    ".zshrc.local"
+    ".zshenv.local"
+    ".config/gh"
+  )
+
+  for file in "${secret_files[@]}"; do
+    local src="$HOME/$file"
+    if [[ -e "$src" && ! -L "$src" ]]; then
+      log_info "Backing up ~/$file"
+      cp -Rp "$src" "$secrets_dir/" 2>/dev/null || log_warning "Failed to copy $file"
+      [[ "$verbose" == true ]] && log_info "  Copied $file"
+    else
+      [[ "$verbose" == true ]] && log_info "  Skipping $file (not found or symlink)"
+    fi
+  done
+
+  # Backup zsh history
+  if [[ -f "$HOME/.zsh_history" ]]; then
+    log_info "Backing up zsh history"
+    cp -p "$HOME/.zsh_history" "$secrets_dir/"
+  fi
+
+  log_success "Secrets backed up"
+  log_warning "Remember: secrets directory contains sensitive data!"
+}
+
+backup_apps() {
+  local backup_path="$1"
+  local verbose="$2"
+  local apps_dir="$backup_path/apps"
+
+  fmt_title_underline "Backing up application settings"
+
+  mkdir -p "$apps_dir"
+
+  # Raycast
+  local raycast_dir="$HOME/Library/Application Support/Raycast"
+  if [[ -d "$raycast_dir" ]]; then
+    log_info "Backing up Raycast settings..."
+    mkdir -p "$apps_dir/Raycast"
+    # Only backup config, not cache
+    cp -Rp "$raycast_dir/Preferences" "$apps_dir/Raycast/" 2>/dev/null || true
+    cp -Rp "$raycast_dir/Extensions" "$apps_dir/Raycast/" 2>/dev/null || true
+  fi
+
+  # Cursor
+  local cursor_dir="$HOME/Library/Application Support/Cursor/User"
+  if [[ -d "$cursor_dir" ]]; then
+    log_info "Backing up Cursor settings..."
+    mkdir -p "$apps_dir/Cursor"
+    cp -p "$cursor_dir/settings.json" "$apps_dir/Cursor/" 2>/dev/null || true
+    cp -p "$cursor_dir/keybindings.json" "$apps_dir/Cursor/" 2>/dev/null || true
+    [[ -d "$cursor_dir/snippets" ]] && cp -Rp "$cursor_dir/snippets" "$apps_dir/Cursor/" 2>/dev/null || true
+    # Export extensions list
+    if command -v cursor &>/dev/null; then
+      cursor --list-extensions > "$apps_dir/Cursor/extensions.txt" 2>/dev/null || true
+    fi
+  fi
+
+  # Bartender
+  local bartender_plist="$HOME/Library/Preferences/com.surteesstudios.Bartender.plist"
+  if [[ -f "$bartender_plist" ]]; then
+    log_info "Backing up Bartender settings..."
+    cp -p "$bartender_plist" "$apps_dir/" 2>/dev/null || true
+  fi
+
+  # Karabiner (if exists and not symlinked)
+  local karabiner_dir="$HOME/.config/karabiner"
+  if [[ -d "$karabiner_dir" && ! -L "$karabiner_dir" ]]; then
+    log_info "Backing up Karabiner settings..."
+    cp -Rp "$karabiner_dir" "$apps_dir/" 2>/dev/null || true
+  fi
+
+  log_success "Application settings backed up"
+}
+
+backup_config() {
+  local backup_path="$1"
+  local verbose="$2"
+
+  fmt_title_underline "Backing up config files"
+
+  local config_files=(
     ".zshrc"
     ".zprofile"
     ".zsh_aliases"
@@ -150,51 +365,43 @@ cmd_backup() {
     ".config/lazygit"
     ".config/nvim"
     ".config/ripgrep"
+    ".config/starship"
     ".config/tmux"
     ".config/wezterm"
     ".config/zsh"
   )
 
-  # Add home directory files to backup
-  if [ -d "$DOTFILES/home" ]; then
+  # Add home directory files from dotfiles
+  if [[ -d "$DOTFILES/home" ]]; then
     while IFS= read -r -d '' file; do
-      relative_path="${file#"$DOTFILES"/home/}"
-      files_to_backup+=("$relative_path")
+      local relative_path="${file#"$DOTFILES"/home/}"
+      config_files+=("$relative_path")
     done < <(find "$DOTFILES/home" -type f -print0)
   fi
 
-  tmpfile=$(mktemp)
-  trap 'rm -f "$tmpfile"' EXIT
+  local tmpfile=$(mktemp)
+  trap 'rm -f "$tmpfile"' RETURN
 
-  for file in "${files_to_backup[@]}"; do
-    src_path="${HOME}/${file}"
+  for file in "${config_files[@]}"; do
+    local src_path="${HOME}/${file}"
     if [[ -L "$src_path" ]]; then
       [[ "$verbose" == true ]] && log_info "Skipping symlink: $file"
       continue
     elif [[ -e "$src_path" ]]; then
-      echo "$file" >>"$tmpfile"
+      echo "$file" >> "$tmpfile"
       [[ "$verbose" == true ]] && log_info "Found: $file"
-    else
-      log_warning "File not found: $src_path"
     fi
   done
 
   if [[ -s "$tmpfile" ]]; then
-    tar -czf "${backup_path}.tar.gz" -C "$HOME" -T "$tmpfile" || {
-      log_error "Failed to create backup archive"
-      exit 1
+    log_info "Creating config archive..."
+    tar -czf "${backup_path}/config.tar.gz" -C "$HOME" -T "$tmpfile" || {
+      log_error "Failed to create config archive"
+      return 1
     }
-
-    if [[ "$verbose" == true ]]; then
-      log_info "Archive contents:"
-      tar -tvf "${backup_path}.tar.gz" | while read -r line; do
-        log_info "$line"
-      done
-    fi
-
-    log_success "Backup created successfully"
+    log_success "Config files archived"
   else
-    log_warning "No files to backup"
+    log_warning "No config files to backup (all are symlinks - good!)"
   fi
 }
 
