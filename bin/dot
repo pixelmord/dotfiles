@@ -56,6 +56,7 @@ cmd_help_utils() {
     ["git"]="Git Utilities"
     ["tmux"]="Tmux Utilities"
     ["claude"]="Claude AI Utilities"
+    ["ralph"]="Ralph Wiggum (PRD Loop)"
   )
 
   # Helper to extract description from a script
@@ -80,7 +81,7 @@ cmd_help_utils() {
   }
 
   # First, show categorized scripts
-  for prefix in git tmux claude; do
+  for prefix in git tmux claude ralph; do
     local found=false
     local output=""
 
@@ -102,7 +103,7 @@ cmd_help_utils() {
   echo -e "$(fmt_key "Other Utilities")"
   find_utils | while read -r name; do
     # Skip if already shown in a category
-    [[ "$name" == git-* || "$name" == tmux-* || "$name" == claude-* ]] && continue
+    [[ "$name" == git-* || "$name" == tmux-* || "$name" == claude-* || "$name" == ralph-* ]] && continue
 
     local cmd="$bin_dir/$name"
     local desc=$(get_script_desc "$cmd")

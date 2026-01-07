@@ -1,0 +1,254 @@
+#!/usr/bin/env bash
+# Description: Run Claude on a single PRD feature (Ralph Wiggum pattern, human-in-loop)
+
+set -Eeuo pipefail
+
+# Colors (if terminal supports them)
+if [[ -t 1 ]]; then
+  RED='\033[0;31m'
+  GREEN='\033[0;32m'
+  YELLOW='\033[0;33m'
+  CYAN='\033[0;36m'
+  DIM='\033[2m'
+  NC='\033[0m' # No Color
+else
+  RED='' GREEN='' YELLOW='' CYAN='' DIM='' NC=''
+fi
+
+error() { echo -e "${RED}Error:${NC} $*" >&2; }
+warn() { echo -e "${YELLOW}Warning:${NC} $*" >&2; }
+info() { echo -e "${CYAN}Info:${NC} $*"; }
+success() { echo -e "${GREEN}OK:${NC} $*"; }
+dim() { echo -e "${DIM}$*${NC}"; }
+
+# Configuration (override via environment)
+PRD_FILE="${PRD_FILE:-prd.json}"
+PROGRESS_FILE="${PROGRESS_FILE:-progress.txt}"
+TYPECHECK_CMD="${TYPECHECK_CMD:-pnpm typecheck}"
+TEST_CMD="${TEST_CMD:-pnpm test}"
+LINT_CMD="${LINT_CMD:-pnpm lint}"
+CLAUDE_CLI="${CLAUDE_CLI:-claude}"
+ALLOWED_TOOLS="${ALLOWED_TOOLS:-Bash,Read,Edit,Write,Grep,Glob}"
+
+# ─────────────────────────────────────────────────────────────
+# Validation
+# ─────────────────────────────────────────────────────────────
+
+validate_environment() {
+  local errors=0
+
+  echo "Validating environment..."
+  echo ""
+
+  # Check: git repo
+  if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    success "Git repository detected"
+  else
+    error "Not inside a git repository"
+    errors=$((errors + 1))
+  fi
+
+  # Check: Claude CLI exists
+  local cli_bin="${CLAUDE_CLI%% *}"
+  if command -v "$cli_bin" >/dev/null 2>&1; then
+    success "CLI found: $cli_bin ($(command -v "$cli_bin"))"
+  else
+    error "CLI not found: $cli_bin"
+    echo "       Set CLAUDE_CLI to your agent runner (e.g., claude)"
+    errors=$((errors + 1))
+  fi
+
+  # Check: jq exists (required for stream parsing)
+  if command -v jq >/dev/null 2>&1; then
+    success "jq found (required for streaming output)"
+  else
+    error "jq not found - required for parsing streaming output"
+    echo "       Install with: brew install jq"
+    errors=$((errors + 1))
+  fi
+
+  # Check: PRD file exists and is valid JSON
+  if [[ -f "$PRD_FILE" ]]; then
+    if jq empty "$PRD_FILE" 2>/dev/null; then
+      local total failing
+      total=$(jq 'length' "$PRD_FILE")
+      failing=$(jq '[.[] | select(.passes == false)] | length' "$PRD_FILE")
+      success "PRD file: $PRD_FILE ($failing failing / $total total features)"
+    else
+      error "PRD file is not valid JSON: $PRD_FILE"
+      errors=$((errors + 1))
+    fi
+  else
+    error "PRD file not found: $PRD_FILE"
+    errors=$((errors + 1))
+  fi
+
+  # Check: typecheck command (extract package manager)
+  local typecheck_bin="${TYPECHECK_CMD%% *}"
+  if command -v "$typecheck_bin" >/dev/null 2>&1; then
+    success "Typecheck runner: $typecheck_bin"
+  else
+    warn "Typecheck runner not found: $typecheck_bin (will fail if used)"
+  fi
+
+  # Check: test command (extract package manager)
+  local test_bin="${TEST_CMD%% *}"
+  if command -v "$test_bin" >/dev/null 2>&1; then
+    success "Test runner: $test_bin"
+  else
+    warn "Test runner not found: $test_bin (will fail if used)"
+  fi
+
+  # Check: lint command (extract package manager)
+  local lint_bin="${LINT_CMD%% *}"
+  if command -v "$lint_bin" >/dev/null 2>&1; then
+    success "Lint runner: $lint_bin"
+  else
+    warn "Lint runner not found: $lint_bin (will fail if used)"
+  fi
+
+  echo ""
+
+  # Show configuration summary
+  echo "Configuration:"
+  echo "  PRD_FILE:      $PRD_FILE"
+  echo "  PROGRESS_FILE: $PROGRESS_FILE"
+  echo "  TYPECHECK_CMD: $TYPECHECK_CMD"
+  echo "  TEST_CMD:      $TEST_CMD"
+  echo "  LINT_CMD:      $LINT_CMD"
+  echo "  CLAUDE_CLI:    $CLAUDE_CLI"
+  echo "  ALLOWED_TOOLS: $ALLOWED_TOOLS"
+  echo ""
+
+  if [[ $errors -gt 0 ]]; then
+    error "Validation failed with $errors error(s). Fix the issues above and retry."
+    exit 1
+  fi
+
+  success "Validation passed"
+  echo ""
+}
+
+# Run validation
+validate_environment
+
+# Ensure progress file exists
+touch "$PROGRESS_FILE"
+
+# Create temp file for capturing raw output
+OUTPUT_FILE=$(mktemp)
+trap 'rm -f "$OUTPUT_FILE"' EXIT
+
+echo "────────────────────────────────────────────────────────────"
+echo "Starting Claude (headless streaming mode)..."
+echo "────────────────────────────────────────────────────────────"
+echo ""
+
+# Build the prompt (using heredoc for cleaner multi-line)
+PROMPT="@${PRD_FILE} @${PROGRESS_FILE}
+
+1. Find the highest-priority feature to work on and work only on that feature.
+   This should be the one YOU decide has the highest priority - not necessarily the first in the list.
+
+2. Implement the feature with appropriate test coverage:
+   - Analyze the feature's category and nature of changes
+   - Decide which tests are most appropriate:
+     * Unit tests: for isolated functions, utilities, pure logic
+     * Integration tests: for API endpoints, database operations, service interactions
+     * E2E tests: for user flows, UI interactions, critical paths
+     * Or a combination based on what serves the project best
+   - Write the tests BEFORE or alongside the implementation (TDD encouraged)
+   - Tests must cover the acceptance steps defined in the PRD
+
+3. Verify all quality checks pass:
+   - Types pass: ${TYPECHECK_CMD}
+   - ALL tests pass (including your new tests): ${TEST_CMD}
+   - Lint passes: ${LINT_CMD}
+   - Do NOT proceed until all checks are green
+
+4. Update the PRD: set passes=true for the completed feature.
+
+5. Append your progress to ${PROGRESS_FILE}.
+   Format: YYYY-MM-DD HH:MM | FEATURE | Summary (include test types added)
+
+6. Make a clean git commit (conventional commit style).
+   Include test files in the commit.
+
+IMPORTANT:
+- ONLY WORK ON A SINGLE FEATURE
+- Feature is NOT complete without passing tests that cover the new functionality
+- When finished with the feature, output exactly: <promise>COMPLETE</promise>
+- If the entire PRD is complete (no more failing features), also output: <promise>COMPLETE</promise>"
+
+# Run Claude in headless streaming mode
+# -p: print/headless mode
+# --verbose: required for stream-json
+# --output-format stream-json: streaming JSON output
+# --include-partial-messages: include deltas as they arrive
+# --allowedTools: auto-approve these tools (no permission prompts)
+"$CLAUDE_CLI" -p "$PROMPT" \
+  --verbose \
+  --output-format stream-json \
+  --include-partial-messages \
+  --allowedTools "$ALLOWED_TOOLS" \
+  2>&1 \
+| tee "$OUTPUT_FILE" \
+| jq -rj --unbuffered '
+  # Stream events contain the actual content
+  if .type == "stream_event" then
+    if .event.type == "content_block_delta" and .event.delta.type == "text_delta" then
+      .event.delta.text // empty
+    elif .event.type == "message_stop" then
+      "\n"
+    else
+      empty
+    end
+  # Result event at the end
+  elif .type == "result" then
+    if .subtype == "success" then
+      "\n"
+    elif .subtype == "error" then
+      "\n[Error: " + (.error // "unknown") + "]\n"
+    else
+      empty
+    end
+  else
+    empty
+  end
+' 2>/dev/null || true
+
+echo ""
+echo "────────────────────────────────────────────────────────────"
+
+# Check result and notify
+if grep -q "<promise>COMPLETE</promise>" "$OUTPUT_FILE" 2>/dev/null; then
+  success "Feature completed!"
+  
+  # Send notification
+  if command -v tt >/dev/null 2>&1; then
+    tt notify "Ralph: Feature completed!"
+  elif command -v terminal-notifier >/dev/null 2>&1; then
+    terminal-notifier -title "Ralph Single" -message "Feature completed!"
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    osascript -e 'display notification "Feature completed!" with title "Ralph Single"'
+  fi
+else
+  # Check if there was an error
+  if grep -q '"subtype":"error"' "$OUTPUT_FILE" 2>/dev/null; then
+    error "Claude encountered an error. Check output above."
+  else
+    warn "No completion promise found. Feature may be incomplete."
+  fi
+  
+  # Send notification anyway
+  if command -v tt >/dev/null 2>&1; then
+    tt notify "Ralph: Run finished (check results)"
+  elif command -v terminal-notifier >/dev/null 2>&1; then
+    terminal-notifier -title "Ralph Single" -message "Run finished (check results)"
+  elif [[ "$OSTYPE" == "darwin"* ]]; then
+    osascript -e 'display notification "Run finished (check results)" with title "Ralph Single"'
+  fi
+fi
+
+echo ""
+echo "Review changes, tests, and commits before continuing."

@@ -1,0 +1,321 @@
+#!/usr/bin/env bash
+# Description: Run Claude on PRD features continuously (Ralph Wiggum pattern, autonomous sprint)
+
+set -Eeuo pipefail
+
+# Colors (if terminal supports them)
+if [[ -t 1 ]]; then
+  RED='\033[0;31m'
+  GREEN='\033[0;32m'
+  YELLOW='\033[0;33m'
+  CYAN='\033[0;36m'
+  DIM='\033[2m'
+  NC='\033[0m' # No Color
+else
+  RED='' GREEN='' YELLOW='' CYAN='' DIM='' NC=''
+fi
+
+error() { echo -e "${RED}Error:${NC} $*" >&2; }
+warn() { echo -e "${YELLOW}Warning:${NC} $*" >&2; }
+info() { echo -e "${CYAN}Info:${NC} $*"; }
+success() { echo -e "${GREEN}OK:${NC} $*"; }
+dim() { echo -e "${DIM}$*${NC}"; }
+
+# Usage check
+if [[ -z "${1:-}" ]]; then
+  echo "Usage: $0 <iterations>"
+  echo ""
+  echo "Run Claude in a loop to implement PRD features."
+  echo "Stops early if PRD is complete or after <iterations> runs."
+  echo ""
+  echo "Environment variables:"
+  echo "  PRD_FILE       Path to prd.json (default: prd.json)"
+  echo "  PROGRESS_FILE  Path to progress.txt (default: progress.txt)"
+  echo "  TYPECHECK_CMD  Typecheck command (default: pnpm typecheck)"
+  echo "  TEST_CMD       Test command (default: pnpm test)"
+  echo "  LINT_CMD       Lint command (default: pnpm lint)"
+  echo "  CLAUDE_CLI     Claude CLI binary (default: claude)"
+  echo "  ALLOWED_TOOLS  Tools to auto-approve (default: Bash,Read,Edit,Write,Grep,Glob)"
+  echo "  SLEEP_BETWEEN  Seconds between iterations (default: 2)"
+  exit 1
+fi
+
+# Configuration
+ITERATIONS="$1"
+PRD_FILE="${PRD_FILE:-prd.json}"
+PROGRESS_FILE="${PROGRESS_FILE:-progress.txt}"
+TYPECHECK_CMD="${TYPECHECK_CMD:-pnpm typecheck}"
+TEST_CMD="${TEST_CMD:-pnpm test}"
+LINT_CMD="${LINT_CMD:-pnpm lint}"
+CLAUDE_CLI="${CLAUDE_CLI:-claude}"
+ALLOWED_TOOLS="${ALLOWED_TOOLS:-Bash,Read,Edit,Write,Grep,Glob}"
+SLEEP_BETWEEN="${SLEEP_BETWEEN:-2}"
+
+# ─────────────────────────────────────────────────────────────
+# Validation
+# ─────────────────────────────────────────────────────────────
+
+validate_environment() {
+  local errors=0
+
+  echo "Validating environment..."
+  echo ""
+
+  # Check: git repo
+  if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    success "Git repository detected"
+  else
+    error "Not inside a git repository"
+    errors=$((errors + 1))
+  fi
+
+  # Check: Claude CLI exists
+  local cli_bin="${CLAUDE_CLI%% *}"
+  if command -v "$cli_bin" >/dev/null 2>&1; then
+    success "CLI found: $cli_bin ($(command -v "$cli_bin"))"
+  else
+    error "CLI not found: $cli_bin"
+    echo "       Set CLAUDE_CLI to your agent runner (e.g., claude)"
+    errors=$((errors + 1))
+  fi
+
+  # Check: jq exists (required for stream parsing)
+  if command -v jq >/dev/null 2>&1; then
+    success "jq found (required for streaming output)"
+  else
+    error "jq not found - required for parsing streaming output"
+    echo "       Install with: brew install jq"
+    errors=$((errors + 1))
+  fi
+
+  # Check: PRD file exists and is valid JSON
+  if [[ -f "$PRD_FILE" ]]; then
+    if jq empty "$PRD_FILE" 2>/dev/null; then
+      local total failing
+      total=$(jq 'length' "$PRD_FILE")
+      failing=$(jq '[.[] | select(.passes == false)] | length' "$PRD_FILE")
+      success "PRD file: $PRD_FILE ($failing failing / $total total features)"
+    else
+      error "PRD file is not valid JSON: $PRD_FILE"
+      errors=$((errors + 1))
+    fi
+  else
+    error "PRD file not found: $PRD_FILE"
+    errors=$((errors + 1))
+  fi
+
+  # Check: typecheck command (extract package manager)
+  local typecheck_bin="${TYPECHECK_CMD%% *}"
+  if command -v "$typecheck_bin" >/dev/null 2>&1; then
+    success "Typecheck runner: $typecheck_bin"
+  else
+    warn "Typecheck runner not found: $typecheck_bin (will fail if used)"
+  fi
+
+  # Check: test command (extract package manager)
+  local test_bin="${TEST_CMD%% *}"
+  if command -v "$test_bin" >/dev/null 2>&1; then
+    success "Test runner: $test_bin"
+  else
+    warn "Test runner not found: $test_bin (will fail if used)"
+  fi
+
+  # Check: lint command (extract package manager)
+  local lint_bin="${LINT_CMD%% *}"
+  if command -v "$lint_bin" >/dev/null 2>&1; then
+    success "Lint runner: $lint_bin"
+  else
+    warn "Lint runner not found: $lint_bin (will fail if used)"
+  fi
+
+  echo ""
+
+  # Show configuration summary
+  echo "Configuration:"
+  echo "  PRD_FILE:      $PRD_FILE"
+  echo "  PROGRESS_FILE: $PROGRESS_FILE"
+  echo "  TYPECHECK_CMD: $TYPECHECK_CMD"
+  echo "  TEST_CMD:      $TEST_CMD"
+  echo "  LINT_CMD:      $LINT_CMD"
+  echo "  CLAUDE_CLI:    $CLAUDE_CLI"
+  echo "  ALLOWED_TOOLS: $ALLOWED_TOOLS"
+  echo "  ITERATIONS:    $ITERATIONS"
+  echo "  SLEEP_BETWEEN: ${SLEEP_BETWEEN}s"
+  echo ""
+
+  if [[ $errors -gt 0 ]]; then
+    error "Validation failed with $errors error(s). Fix the issues above and retry."
+    exit 1
+  fi
+
+  success "Validation passed. Starting sprint..."
+  echo ""
+}
+
+# Run validation
+validate_environment
+
+# Ensure progress file exists
+touch "$PROGRESS_FILE"
+
+# Create temp file for capturing raw output
+OUTPUT_FILE=$(mktemp)
+trap 'rm -f "$OUTPUT_FILE"; echo ""; echo "Sprint interrupted."; exit 0' INT TERM
+trap 'rm -f "$OUTPUT_FILE"' EXIT
+
+for ((i = 1; i <= ITERATIONS; i++)); do
+  echo ""
+  echo "════════════════════════════════════════════════════════════"
+  echo " Iteration $i of $ITERATIONS"
+  echo "════════════════════════════════════════════════════════════"
+  echo ""
+
+  # Show current PRD status
+  if command -v jq >/dev/null 2>&1 && [[ -f "$PRD_FILE" ]]; then
+    failing_now=$(jq '[.[] | select(.passes == false)] | length' "$PRD_FILE")
+    passing_now=$(jq '[.[] | select(.passes == true)] | length' "$PRD_FILE")
+    dim "PRD Status: $failing_now failing, $passing_now passing"
+    echo ""
+  fi
+
+  # Build the prompt
+  PROMPT="@${PRD_FILE} @${PROGRESS_FILE}
+
+1. Find the highest-priority feature to work on and work only on that feature.
+   This should be the one YOU decide has the highest priority - not necessarily the first in the list.
+
+2. Implement the feature with appropriate test coverage:
+   - Analyze the feature's category and nature of changes
+   - Decide which tests are most appropriate:
+     * Unit tests: for isolated functions, utilities, pure logic
+     * Integration tests: for API endpoints, database operations, service interactions
+     * E2E tests: for user flows, UI interactions, critical paths
+     * Or a combination based on what serves the project best
+   - Write the tests BEFORE or alongside the implementation (TDD encouraged)
+   - Tests must cover the acceptance steps defined in the PRD
+
+3. Verify all quality checks pass:
+   - Types pass: ${TYPECHECK_CMD}
+   - ALL tests pass (including your new tests): ${TEST_CMD}
+   - Lint passes: ${LINT_CMD}
+   - Do NOT proceed until all checks are green
+
+4. Update the PRD: set passes=true for the completed feature.
+
+5. Append your progress to ${PROGRESS_FILE}.
+   Format: YYYY-MM-DD HH:MM | FEATURE | Summary (include test types added)
+
+6. Make a clean git commit (conventional commit style).
+   Include test files in the commit.
+
+IMPORTANT:
+- ONLY WORK ON A SINGLE FEATURE
+- Feature is NOT complete without passing tests that cover the new functionality
+- When finished with the feature, output exactly: <promise>COMPLETE</promise>
+- If the entire PRD is complete (no more failing features), also output: <promise>COMPLETE</promise>"
+
+  # Run Claude in headless streaming mode
+  # --verbose is required for stream-json output
+  "$CLAUDE_CLI" -p "$PROMPT" \
+    --verbose \
+    --output-format stream-json \
+    --include-partial-messages \
+    --allowedTools "$ALLOWED_TOOLS" \
+    2>&1 \
+  | tee "$OUTPUT_FILE" \
+  | jq -rj --unbuffered '
+    # Stream events contain the actual content
+    if .type == "stream_event" then
+      if .event.type == "content_block_delta" and .event.delta.type == "text_delta" then
+        .event.delta.text // empty
+      elif .event.type == "message_stop" then
+        "\n"
+      else
+        empty
+      end
+    # Result event at the end
+    elif .type == "result" then
+      if .subtype == "success" then
+        "\n"
+      elif .subtype == "error" then
+        "\n[Error: " + (.error // "unknown") + "]\n"
+      else
+        empty
+      end
+    else
+      empty
+    end
+  ' 2>/dev/null || true
+
+  echo ""
+  echo "────────────────────────────────────────────────────────────"
+
+  # Check for completion promise
+  if grep -q "<promise>COMPLETE</promise>" "$OUTPUT_FILE" 2>/dev/null; then
+    # Check if entire PRD is complete
+    if command -v jq >/dev/null 2>&1 && [[ -f "$PRD_FILE" ]]; then
+      remaining=$(jq '[.[] | select(.passes == false)] | length' "$PRD_FILE")
+      if [[ "$remaining" -eq 0 ]]; then
+        echo ""
+        success "PRD complete! All features passing after $i iteration(s)."
+        
+        # Notify
+        if command -v tt >/dev/null 2>&1; then
+          tt notify "Ralph Sprint: PRD complete after $i iterations!"
+        elif command -v terminal-notifier >/dev/null 2>&1; then
+          terminal-notifier -title "Ralph Sprint" -message "PRD complete after $i iterations!"
+        elif [[ "$OSTYPE" == "darwin"* ]]; then
+          osascript -e "display notification \"PRD complete after $i iterations!\" with title \"Ralph Sprint\""
+        fi
+        exit 0
+      fi
+    fi
+    
+    success "Iteration $i completed. Feature done."
+  else
+    # Check if there was an error
+    if grep -q '"subtype":"error"' "$OUTPUT_FILE" 2>/dev/null; then
+      error "Claude encountered an error in iteration $i."
+    else
+      warn "No completion promise in iteration $i. Feature may be incomplete."
+    fi
+  fi
+
+  # Check remaining features
+  if command -v jq >/dev/null 2>&1 && [[ -f "$PRD_FILE" ]]; then
+    remaining=$(jq '[.[] | select(.passes == false)] | length' "$PRD_FILE")
+    if [[ "$remaining" -eq 0 ]]; then
+      echo ""
+      success "PRD complete! No more failing features."
+      
+      if command -v tt >/dev/null 2>&1; then
+        tt notify "Ralph Sprint: PRD complete after $i iterations!"
+      elif command -v terminal-notifier >/dev/null 2>&1; then
+        terminal-notifier -title "Ralph Sprint" -message "PRD complete after $i iterations!"
+      elif [[ "$OSTYPE" == "darwin"* ]]; then
+        osascript -e "display notification \"PRD complete after $i iterations!\" with title \"Ralph Sprint\""
+      fi
+      exit 0
+    else
+      dim "$remaining feature(s) remaining..."
+    fi
+  fi
+
+  # Pause between iterations (unless last iteration)
+  if [[ $i -lt $ITERATIONS ]]; then
+    dim "Pausing ${SLEEP_BETWEEN}s before next iteration..."
+    sleep "$SLEEP_BETWEEN"
+  fi
+done
+
+echo ""
+echo "════════════════════════════════════════════════════════════"
+success "Completed $ITERATIONS iterations."
+
+# Final status
+if command -v jq >/dev/null 2>&1 && [[ -f "$PRD_FILE" ]]; then
+  remaining=$(jq '[.[] | select(.passes == false)] | length' "$PRD_FILE")
+  if [[ "$remaining" -gt 0 ]]; then
+    warn "$remaining feature(s) still failing. Run more iterations or check manually."
+  fi
+fi
