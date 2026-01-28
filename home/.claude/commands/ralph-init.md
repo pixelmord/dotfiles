@@ -1,6 +1,6 @@
 ---
 description: "Initialize a repository for Ralph Wiggum development loop (PRD-driven agent workflow)"
-argument-hint: "[--pm npm|pnpm|yarn|bun] [--typecheck CMD] [--test CMD] [--lint CMD]"
+argument-hint: "[--pm npm|pnpm|yarn|bun] [--typecheck CMD] [--test CMD] [--e2e CMD] [--lint CMD]"
 allowed-tools: ["Read", "Write", "Bash", "Grep"]
 ---
 
@@ -36,10 +36,19 @@ Check for existing configuration:
 5. If TypeScript installed → `{pm} exec tsc --noEmit`
 6. Default: `echo "No typecheck configured"`
 
-**Test command** (in order of preference):
+**Unit Test command** (in order of preference):
 1. User-provided via `--test`
 2. Existing `test` script in package.json → `{pm} test`
-3. Default: `echo "No tests configured"`
+3. Existing `test:unit` script → `{pm} run test:unit`
+4. Default: `echo "No unit tests configured"`
+
+**E2E Test command** (in order of preference):
+1. User-provided via `--e2e`
+2. Existing `test:e2e` script in package.json → `{pm} run test:e2e`
+3. Existing `e2e` script → `{pm} run e2e`
+4. Existing `playwright` script → `{pm} run playwright`
+5. If Playwright installed → `{pm} exec playwright test`
+6. Default: `echo "No E2E tests configured"`
 
 **Lint command** (in order of preference):
 1. User-provided via `--lint`
@@ -55,8 +64,8 @@ Add or update these scripts:
 ```json
 {
   "scripts": {
-    "ralph:single": "TYPECHECK_CMD=\"{typecheck}\" TEST_CMD=\"{test}\" LINT_CMD=\"{lint}\" ralph-single",
-    "ralph:sprint": "TYPECHECK_CMD=\"{typecheck}\" TEST_CMD=\"{test}\" LINT_CMD=\"{lint}\" ralph-sprint"
+    "ralph:single": "TYPECHECK_CMD=\"{typecheck}\" UNIT_TEST_CMD=\"{unit_test}\" E2E_TEST_CMD=\"{e2e_test}\" LINT_CMD=\"{lint}\" ralph-single",
+    "ralph:sprint": "TYPECHECK_CMD=\"{typecheck}\" UNIT_TEST_CMD=\"{unit_test}\" E2E_TEST_CMD=\"{e2e_test}\" LINT_CMD=\"{lint}\" ralph-sprint"
   }
 }
 ```
@@ -132,12 +141,28 @@ If no package.json exists:
 
 ## Example Configurations
 
-**TypeScript + Vitest project:**
+**TypeScript + Vitest + Playwright project:**
 ```json
 {
   "scripts": {
-    "ralph:single": "TYPECHECK_CMD=\"pnpm run typecheck\" TEST_CMD=\"pnpm test\" LINT_CMD=\"pnpm run lint\" ralph-single",
-    "ralph:sprint": "TYPECHECK_CMD=\"pnpm run typecheck\" TEST_CMD=\"pnpm test\" LINT_CMD=\"pnpm run lint\" ralph-sprint"
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "ralph:single": "TYPECHECK_CMD=\"pnpm run typecheck\" UNIT_TEST_CMD=\"pnpm test\" E2E_TEST_CMD=\"pnpm run test:e2e\" LINT_CMD=\"pnpm run lint\" ralph-single",
+    "ralph:sprint": "TYPECHECK_CMD=\"pnpm run typecheck\" UNIT_TEST_CMD=\"pnpm test\" E2E_TEST_CMD=\"pnpm run test:e2e\" LINT_CMD=\"pnpm run lint\" ralph-sprint"
+  }
+}
+```
+
+**React + TanStack project (typical setup):**
+```json
+{
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "lint": "biome check",
+    "ralph:single": "TYPECHECK_CMD=\"pnpm run typecheck\" UNIT_TEST_CMD=\"pnpm test\" E2E_TEST_CMD=\"pnpm run test:e2e\" LINT_CMD=\"pnpm run lint\" ralph-single",
+    "ralph:sprint": "TYPECHECK_CMD=\"pnpm run typecheck\" UNIT_TEST_CMD=\"pnpm test\" E2E_TEST_CMD=\"pnpm run test:e2e\" LINT_CMD=\"pnpm run lint\" ralph-sprint"
   }
 }
 ```
@@ -145,10 +170,10 @@ If no package.json exists:
 **Python project (no package.json):**
 ```bash
 # Add to Makefile or shell alias
-TYPECHECK_CMD="mypy ." TEST_CMD="pytest" LINT_CMD="ruff check ." ralph-single
+TYPECHECK_CMD="mypy ." UNIT_TEST_CMD="pytest tests/unit" E2E_TEST_CMD="pytest tests/e2e" LINT_CMD="ruff check ." ralph-single
 ```
 
 **Go project:**
 ```bash
-TYPECHECK_CMD="go build ./..." TEST_CMD="go test ./..." LINT_CMD="golangci-lint run" ralph-single
+TYPECHECK_CMD="go build ./..." UNIT_TEST_CMD="go test ./..." E2E_TEST_CMD="go test -tags=e2e ./..." LINT_CMD="golangci-lint run" ralph-single
 ```

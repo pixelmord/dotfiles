@@ -1,7 +1,7 @@
 ---
-description: "Manage prd.json features for Ralph Wiggum development loops (add|edit|pass|fail|list)"
-argument-hint: "[add|edit|pass|fail|list] [description] [--category X] [--steps ...] [--priority X] [--status X]"
-allowed-tools: ["Read", "Write", "Grep"]
+description: "Manage prd.json features and author PRDs (create|add|edit|pass|fail|list)"
+argument-hint: "[create|add|edit|pass|fail|list] \"<topic or description>\" [--stack web|mobile|content] [--research] [--priority X] [--category X] [--steps ...]"
+allowed-tools: ["Read", "Write", "Grep", "Skill"]
 ---
 
 You are managing a JSON Product Requirements Document (`prd.json`) for iterative agent development.
@@ -32,6 +32,114 @@ Adding feature:
     
 Add this feature? (yes/no)
 ```
+
+---
+
+## Create PRD (`/prd create`)
+
+**Invoke the `prd-creator` skill** to generate a full PRD from a project idea.
+
+### Usage
+
+```bash
+# Greenfield (default): Full discovery, agent proposes features
+/prd create "AI meal planner" --stack web
+/prd create "Habit tracker app" --stack mobile
+/prd create "Developer docs site" --stack content
+
+# Brownfield: Analyze existing codebase first, propose features that fit
+/prd create "Add social sharing" --brownfield
+/prd create "Admin dashboard" --brownfield --no-research
+```
+
+### Arguments
+
+| Argument | Default | Description |
+|----------|---------|-------------|
+| `<topic>` | required | Project idea or name |
+| `--greenfield` | default | New project from scratch (full discovery) |
+| `--brownfield` | - | Adding to existing codebase (respects existing patterns) |
+| `--stack` | `web` | Preset: `web` (React+TanStack), `mobile` (React Native), `content` (Astro) |
+| `--research` | enabled | Use exa MCP to research best practices |
+| `--no-research` | - | Skip research phase |
+| `--dry-run` | - | Preview output without writing files |
+
+### Behavior
+
+1. **Load skill**: Invoke `prd-creator` skill for workflow guidance
+2. **Classify project**: Greenfield (new) or brownfield (existing codebase)
+   - Brownfield: Analyze existing stack, patterns, conventions first
+3. **Research** (if enabled): Use exa MCP for market/competitor/pattern research
+   ```
+   skill_mcp(mcp_name="exa", tool_name="web_search_exa", arguments='{"query": "...", "num_results": 5}')
+   ```
+4. **Agent brainstorms features**: Proposes comprehensive feature set based on research
+   - Grouped by priority: must-have / nice-to-have / future
+   - Shows reasoning for each feature
+5. **User refines**: Add, remove, re-prioritize until feature set is locked
+6. **Technical questions**: Stack, data model, auth, integrations (skip if obvious)
+7. **Generate PRD.md**: Human-readable document with agreed features
+8. **Generate prd.json entries**: Machine-consumable tasks
+9. **Confirm**: Show preview and diff before writing
+10. **Write files** (on confirmation):
+    - `docs/specs/PRD_<topic-slug>_<YYYYMMDD_HHMM>.md`
+    - Append to `prd.json` (no duplicates, no deletions)
+
+### Stack Presets
+
+**Web** (React + TypeScript + TanStack):
+- Vite or Next.js, TanStack Router/Query, Zustand, Tailwind
+- Testing: Vitest + Playwright
+
+**Mobile** (React Native / Expo):
+- Expo + EAS, React Navigation, TanStack Query, Zustand
+- Testing: Jest + Detox/Maestro
+
+**Content** (Astro + Tailwind):
+- Astro 4+, MDX, Tailwind, Pagefind
+- Testing: Playwright + a11y
+
+### Output
+
+**PRD.md** (human-readable):
+- Goals, non-goals, target users
+- Core features with acceptance criteria
+- Data model, auth, integrations
+- NFRs, milestones, risks
+
+**prd.json** (machine-consumable):
+- Each feature as a task with category, steps, priority
+- `passes: false` by default
+- Ready for `ralph-single` / `ralph-sprint`
+
+### Example
+
+```bash
+/prd create "Recipe sharing platform" --stack web
+```
+
+Output:
+```
+PRD written: docs/specs/PRD_recipe-sharing-platform_20260108_2245.md
+prd.json: 8 items added (0 duplicates skipped)
+
+Features added:
+  [high] functional: "User authentication with email/OAuth"
+  [high] functional: "Create and publish recipes"
+  [high] functional: "Search recipes by ingredients"
+  [med]  ui: "Responsive recipe cards grid"
+  [med]  api: "Recipe CRUD API endpoints"
+  ...
+```
+
+### Notes
+
+- **No auto-commit**: User must review and commit manually
+- **Duplicates skipped**: Existing descriptions (case-insensitive) won't be overwritten
+- **Creates docs/specs/**: Directory created if missing (with confirmation)
+- **Skill required**: This command invokes the `prd-creator` skill
+
+---
 
 ## File Location
 - `prd.json` at repository root
