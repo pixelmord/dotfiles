@@ -2,7 +2,7 @@
 
 if OS.mac?
   tap 'FelixKratz/formulae' # For janky borders
-  # tap 'oven-sh/bun'        # Bun JavaScript runtime (if needed for bun formula)
+  tap 'oven-sh/bun'        # Bun JavaScript runtime
 
   # macOS-specific utilities
   brew 'noti'                          # utility to display notifications from scripts
@@ -33,11 +33,12 @@ if OS.mac?
   # cask 'visual-studio-code'             # VS Code editor
   cask 'cursor'                          # Cursor editor (AI-powered)
   cask 'codex'                           # AI code completion
+  cask 'zed'                             # Zed editor (high-performance)
   # cask 'github@beta'                    # GitHub Desktop (beta)
   # cask 'jetbrains-toolbox'              # JetBrains Toolbox
   # cask 'postman'                        # API testing tool
   # cask 'hoppscotch'                     # API development ecosystem
-  # cask 'ngrok'                          # secure tunnels to localhost
+  cask 'ngrok'                           # secure tunnels to localhost
 
   # Terminal & Shell
   # cask 'iterm2'                         # iTerm2 terminal emulator
@@ -65,10 +66,12 @@ if OS.mac?
   cask 'bartender'                       # menu bar organizer
   cask 'caffeine'                        # prevent sleep
   cask 'block-goose'                     # ad blocker
+  cask 'antigravity'                     # window management utility
   # cask 'duet'                           # use iPad as second display
   # cask 'rustdesk'                       # remote desktop software
   # cask 'zoom'                           # video conferencing
   cask 'zen'                             # focus and productivity app
+  cask 'voiceink'                        # voice-to-text utility
 
   # Cloud & DevOps
   cask 'gcloud-cli'                     # Google Cloud SDK
@@ -83,6 +86,7 @@ if OS.mac?
   # Email & Communication
   # cask 'proton-mail'                    # ProtonMail client
   cask 'proton-pass'                     # Proton Pass password manager
+  cask 'proton-drive'                    # Proton Drive cloud storage
   cask 'lastpass'                       # password manager (consider alternatives)
 
   # Microsoft
@@ -102,8 +106,8 @@ if OS.mac?
   cask 'font-fira-code'                  # Fira Code font
   cask 'font-hack-nerd-font'             # Hack Nerd Font
   cask 'font-jetbrains-mono'             # JetBrains Mono font
+  cask 'font-jetbrains-mono-nerd-font'   # JetBrains Mono Nerd Font
   cask 'font-lato'                       # Lato font family
-  # NOTE: font-jetbrains-mono-nerd-font is also installed
 
   # ============================================================================
   # QUICKLOOK PLUGINS
@@ -176,7 +180,8 @@ brew 'lazygit'                         # a better git UI
 # PROGRAMMING LANGUAGES & RUNTIMES
 # ============================================================================
 brew 'python'                          # python (latest)
-# brew 'fnm'                             # Fast Node version manager, currently using volta
+brew 'fnm'                             # Fast Node version manager
+brew 'volta'                           # JavaScript tool manager
 brew 'uv'                              # Fast Python package installer
 brew 'bun'                             # Bun JavaScript runtime
 brew 'pyenv'                           # Python version manager
@@ -194,6 +199,9 @@ brew 'grc'                             # generic colorizer for terminal output
 brew 'htop'                            # interactive process viewer
 brew 'btop'                            # a top alternative
 brew 'macchina'                        # system information fetcher
+brew 'zsh-autocomplete'                # real-time type-ahead completion for zsh
+brew 'zsh-autosuggestions'             # fish-like autosuggestions for zsh
+brew 'zsh-syntax-highlighting'         # syntax highlighting for zsh
 
 # ============================================================================
 # JSON, YAML & DATA PROCESSING
@@ -223,6 +231,9 @@ brew 'libxmlsec1'                      # XML security library
 brew 'freetype'                        # font rendering library
 brew 'libpq'                           # PostgreSQL client library
 brew 'suite-sparse'                    # sparse matrix library
+brew 'openblas'                        # optimized BLAS library
+brew 'glpk'                            # GNU Linear Programming Kit
+brew 'gnupg'                           # GNU Privacy Guard
 
 
 # ============================================================================
@@ -270,6 +281,8 @@ brew 'yt-dlp'                           # download videos from YouTube and other
 # ============================================================================
 brew 'neovim'                          # A better vim
 brew 'glow'                            # markdown viewer
+brew 'opencode'                        # OpenCode CLI tool
+brew 'mole'                            # SSH tunneling tool
 # brew 'pipenv'                         # Python dependency manager
 # brew 'pipx'                           # install and run Python applications in isolated environments
 # brew 'rclone'                         # rsync for cloud storage
@@ -279,6 +292,52 @@ brew 'glow'                            # markdown viewer
 
 if OS.mac?
   brew 'terminal-notifier'              # send macOS User Notifications from command line
+
+  # ============================================================================
+  # VS CODE / CURSOR EXTENSIONS
+  # ============================================================================
+  vscode 'aaron-bond.better-comments'              # improved comment highlighting
+  vscode 'anthropic.claude-code'                   # Claude AI integration
+  vscode 'anysphere.cursorpyright'                 # Python type checking for Cursor
+  vscode 'astro-build.astro-vscode'                # Astro framework support
+  vscode 'bierner.markdown-mermaid'                # Mermaid diagram support in markdown
+  vscode 'biomejs.biome'                           # fast formatter and linter
+  vscode 'bradlc.vscode-tailwindcss'               # Tailwind CSS IntelliSense
+  vscode 'christian-kohler.npm-intellisense'       # npm module import autocomplete
+  vscode 'christian-kohler.path-intellisense'      # file path autocomplete
+  vscode 'davidanson.vscode-markdownlint'          # markdown linting
+  vscode 'donjayamanne.githistory'                 # git history viewer
+  vscode 'editorconfig.editorconfig'               # EditorConfig support
+  vscode 'firsttris.vscode-jest-runner'            # run Jest tests from editor
+  vscode 'formulahendry.auto-close-tag'            # auto close HTML/XML tags
+  vscode 'formulahendry.auto-rename-tag'           # auto rename paired HTML/XML tags
+  vscode 'github.vscode-github-actions'            # GitHub Actions workflow support
+  vscode 'github.vscode-pull-request-github'       # GitHub PR integration
+  vscode 'gruntfuggly.todo-tree'                   # show TODO/FIXME in tree view
+  vscode 'kisstkondoros.vscode-gutter-preview'     # image preview in gutter
+  vscode 'mhutchie.git-graph'                      # git graph visualization
+  vscode 'mikestead.dotenv'                        # .env file syntax highlighting
+  vscode 'ms-azuretools.vscode-docker'             # Docker support
+  vscode 'ms-playwright.playwright'                # Playwright test runner
+  vscode 'ms-python.debugpy'                       # Python debugger
+  vscode 'ms-python.python'                        # Python language support
+  vscode 'ms-vscode.powershell'                    # PowerShell support
+  vscode 'naumovs.color-highlight'                 # highlight colors in code
+  vscode 'oderwat.indent-rainbow'                  # colorize indentation levels
+  vscode 'redhat.vscode-yaml'                      # YAML language support
+  vscode 'sonarsource.sonarlint-vscode'            # code quality and security linting
+  vscode 'streetsidesoftware.code-spell-checker'   # spell checker
+  vscode 'tamasfe.even-better-toml'                # TOML language support
+  vscode 'timonwong.shellcheck'                    # shell script linting
+  vscode 'typescriptteam.native-preview'           # TypeScript native preview
+  vscode 'unifiedjs.vscode-mdx'                    # MDX language support
+  vscode 'usernamehw.errorlens'                    # inline error messages
+  vscode 'vitest.explorer'                         # Vitest test runner
+  vscode 'vivaxy.vscode-conventional-commits'      # conventional commit message helper
+  vscode 'wmaurer.change-case'                     # change case commands
+  vscode 'yoavbls.pretty-ts-errors'                # prettier TypeScript errors
+  vscode 'yzhang.markdown-all-in-one'              # markdown all-in-one toolkit
+  vscode 'zignd.html-css-class-completion'         # CSS class name completion
 end
 
 # ============================================================================
