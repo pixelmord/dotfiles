@@ -25,10 +25,14 @@ dim() { echo -e "${DIM}$*${NC}"; }
 PRD_FILE="${PRD_FILE:-prd.json}"
 PROGRESS_FILE="${PROGRESS_FILE:-progress.txt}"
 TYPECHECK_CMD="${TYPECHECK_CMD:-pnpm typecheck}"
-TEST_CMD="${TEST_CMD:-pnpm test}"
+UNIT_TEST_CMD="${UNIT_TEST_CMD:-pnpm test}"
+E2E_TEST_CMD="${E2E_TEST_CMD:-pnpm test:e2e}"
 LINT_CMD="${LINT_CMD:-pnpm lint}"
 CLAUDE_CLI="${CLAUDE_CLI:-claude}"
 ALLOWED_TOOLS="${ALLOWED_TOOLS:-Bash,Read,Edit,Write,Grep,Glob}"
+# UI quality check settings
+APP_URL="${APP_URL:-http://localhost:3000}"
+UI_CHECK="${UI_CHECK:-true}"
 
 # ─────────────────────────────────────────────────────────────
 # Validation
@@ -91,12 +95,20 @@ validate_environment() {
     warn "Typecheck runner not found: $typecheck_bin (will fail if used)"
   fi
 
-  # Check: test command (extract package manager)
-  local test_bin="${TEST_CMD%% *}"
-  if command -v "$test_bin" >/dev/null 2>&1; then
-    success "Test runner: $test_bin"
+  # Check: unit test command (extract package manager)
+  local unit_test_bin="${UNIT_TEST_CMD%% *}"
+  if command -v "$unit_test_bin" >/dev/null 2>&1; then
+    success "Unit test runner: $unit_test_bin"
   else
-    warn "Test runner not found: $test_bin (will fail if used)"
+    warn "Unit test runner not found: $unit_test_bin (will fail if used)"
+  fi
+
+  # Check: e2e test command (extract package manager)
+  local e2e_test_bin="${E2E_TEST_CMD%% *}"
+  if command -v "$e2e_test_bin" >/dev/null 2>&1; then
+    success "E2E test runner: $e2e_test_bin"
+  else
+    warn "E2E test runner not found: $e2e_test_bin (will fail if used)"
   fi
 
   # Check: lint command (extract package manager)
@@ -111,13 +123,15 @@ validate_environment() {
 
   # Show configuration summary
   echo "Configuration:"
-  echo "  PRD_FILE:      $PRD_FILE"
-  echo "  PROGRESS_FILE: $PROGRESS_FILE"
-  echo "  TYPECHECK_CMD: $TYPECHECK_CMD"
-  echo "  TEST_CMD:      $TEST_CMD"
-  echo "  LINT_CMD:      $LINT_CMD"
-  echo "  CLAUDE_CLI:    $CLAUDE_CLI"
-  echo "  ALLOWED_TOOLS: $ALLOWED_TOOLS"
+  echo "  PRD_FILE:       $PRD_FILE"
+  echo "  PROGRESS_FILE:  $PROGRESS_FILE"
+  echo "  TYPECHECK_CMD:  $TYPECHECK_CMD"
+  echo "  UNIT_TEST_CMD:  $UNIT_TEST_CMD"
+  echo "  E2E_TEST_CMD:   $E2E_TEST_CMD"
+  echo "  LINT_CMD:       $LINT_CMD"
+  echo "  CLAUDE_CLI:     $CLAUDE_CLI"
+  echo "  ALLOWED_TOOLS:  $ALLOWED_TOOLS"
+  echo "  APP_URL:        $APP_URL"
   echo ""
 
   if [[ $errors -gt 0 ]]; then
@@ -151,32 +165,67 @@ PROMPT="@${PRD_FILE} @${PROGRESS_FILE}
    This should be the one YOU decide has the highest priority - not necessarily the first in the list.
 
 2. Implement the feature with appropriate test coverage:
-   - Analyze the feature's category and nature of changes
-   - Decide which tests are most appropriate:
-     * Unit tests: for isolated functions, utilities, pure logic
-     * Integration tests: for API endpoints, database operations, service interactions
-     * E2E tests: for user flows, UI interactions, critical paths
-     * Or a combination based on what serves the project best
-   - Write the tests BEFORE or alongside the implementation (TDD encouraged)
+   
+   UNIT TESTS (run with: ${UNIT_TEST_CMD})
+   - Use for: isolated functions, utilities, pure logic, hooks, helpers
+   - Use for: data transformations, validation logic, calculations
+   - Framework: Vitest / Jest with Testing Library
+   
+   E2E TESTS (run with: ${E2E_TEST_CMD})
+   - REQUIRED for: new pages, new user flows, new workflows, critical paths
+   - REQUIRED for: features that involve user interactions (clicks, forms, navigation)
+   - Use for: verifying the full stack works together
+   - Framework: Playwright
+   - Write E2E tests that cover the acceptance steps in the PRD
+   
+   TESTING DECISION GUIDE:
+   | Feature Type | Unit Tests | E2E Tests |
+   |--------------|------------|-----------|
+   | New page/route | Optional | REQUIRED |
+   | New user action/flow | Maybe | REQUIRED |
+   | New API endpoint | Yes (handlers) | Maybe |
+   | Utility function | Yes | No |
+   | UI component | Yes (render) | If critical path |
+   | Data model/schema | Yes | No |
+   | Form handling | Yes (validation) | REQUIRED |
+   | Auth flows | Yes (logic) | REQUIRED |
+   
+   - Write tests BEFORE or alongside implementation (TDD encouraged)
+   - E2E tests should simulate real user behavior
    - Tests must cover the acceptance steps defined in the PRD
 
 3. Verify all quality checks pass:
    - Types pass: ${TYPECHECK_CMD}
-   - ALL tests pass (including your new tests): ${TEST_CMD}
+   - Unit tests pass: ${UNIT_TEST_CMD}
+   - E2E tests pass: ${E2E_TEST_CMD}
    - Lint passes: ${LINT_CMD}
-   - Do NOT proceed until all checks are green
+   - Do NOT proceed until ALL checks are green
 
-4. Update the PRD: set passes=true for the completed feature.
+4. UI Quality Check (for ui/functional features):
+   If the feature category is 'ui' or 'functional' and involves browser interaction:
+   - Use Playwright MCP to verify the UI at ${APP_URL}
+   - Run these checks:
+     a) browser_navigate to the relevant page
+     b) browser_console_messages with level 'error' - MUST have zero errors
+     c) browser_network_requests - check for failed requests (4xx, 5xx)
+     d) browser_snapshot to verify the UI structure
+     e) Optionally browser_take_screenshot for visual documentation
+   - If console errors or failed requests exist, fix them before proceeding
+   - Skip this step for non-UI features (api, infra, docs, test categories)
 
-5. Append your progress to ${PROGRESS_FILE}.
-   Format: YYYY-MM-DD HH:MM | FEATURE | Summary (include test types added)
+5. Update the PRD: set passes=true for the completed feature.
 
-6. Make a clean git commit (conventional commit style).
+6. Append your progress to ${PROGRESS_FILE}.
+   Format: YYYY-MM-DD HH:MM | FEATURE | Summary (include: unit tests added, e2e tests added, UI check status)
+
+7. Make a clean git commit (conventional commit style).
    Include test files in the commit.
 
 IMPORTANT:
 - ONLY WORK ON A SINGLE FEATURE
 - Feature is NOT complete without passing tests that cover the new functionality
+- New pages/flows/workflows REQUIRE E2E tests - no exceptions
+- UI features require zero console errors and no failed network requests
 - When finished with the feature, output exactly: <promise>COMPLETE</promise>
 - If the entire PRD is complete (no more failing features), also output: <promise>COMPLETE</promise>"
 
