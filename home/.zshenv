@@ -32,3 +32,4 @@ typeset -aU path
 export EDITOR='nvim'
 export GIT_EDITOR='nvim'
 
+export ZSH_HIGHLIGHT_HIGHLIGHTERS_DIR=/opt/homebrew/share/zsh-syntax-highlighting/highlighters
