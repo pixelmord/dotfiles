@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Description: Test if path is a directory (exit 0 if true)
+
+test -d "$1"

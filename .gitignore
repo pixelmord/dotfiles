@@ -1,59 +1,19 @@
-# Compiled Python files
-*.pyc
-
-# working files
-.vim/viminfo
-.vim/swaps/*
-.vim/undo
-
-# git credential file
-.gitconfig.local
-
-# Folder view configuration files
-.DS_Store
-Desktop.ini
-
-# Thumbnail cache files
-._*
-Thumbs.db
-
-# Files that might appear on external disks
-.Spotlight-V100
-.Trashes
-
-# IDE meta data
-.settings
-.project
-.buildpath
-.idea
-
-# node stuff
-node_modules
+.netrwhist
 npm-debug.log
-yarn-error.log
+config/nvim/spell
+config/nvim/shada
+vim/vim.symlink/spell/
+vim/vim.symlink/plugged/
+Brewfile.lock.json
+lazy-lock.json
+config/kitty/kitty-overrides.conf
+config/zsh/.zsh_history
+config/zsh/.zcompdump
+config/zsh/.zcompdump-*
+config/zsh/.zsh_sessions
+config/zsh/ohmyzsh
+config/ghostty/overrides
+node_modules/
+build/
+config/karabiner/automatic_backups/
 
-# vagrant
-.vagrant
-
-# cache files
-.sass-cache
-
-# DRUPAL Ignore configuration files that may contain sensitive information.
-sites/*/settings*.php
-sites/*/settings*.yml
-sites/*/services*.yml
-development.services.yml
-sites/simpletest
-# patches/
-
-# DRUPAL Ignore paths that contain user-generated content.
-sites/*/files
-sites/*/private
-sites/*.local
-sites/*.dev
-
-# tmp files
-*scsslint_tmp*.css
-
-# dotfiles git repo
-.cfg

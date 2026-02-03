@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Description: Test if path is a file (exit 0 if true)
+
+test -f "$1"

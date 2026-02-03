@@ -1,0 +1,105 @@
+# Cursor Extensions
+# One extension ID per line. Lines starting with # are ignored.
+# Extension IDs are in the format: publisher.extension-name
+
+# ============================================================================
+# ESSENTIAL - Core Development
+# ============================================================================
+
+# TypeScript & JavaScript
+yoavbls.pretty-ts-errors                    # Better TypeScript error display with inline explanations
+usernamehw.errorlens                         # Inline error and warning highlighting (huge productivity boost)
+biomejs.biome                                # Fast linter/formatter (modern alternative to ESLint+Prettier)
+christian-kohler.path-intellisense           # Autocomplete for file paths
+christian-kohler.npm-intellisense            # Autocomplete for npm packages in import statements
+# wix.vscode-import-cost                     # Shows bundle size impact of imports (NOT AVAILABLE in Cursor marketplace)
+
+# React & JSX
+formulahendry.auto-close-tag                 # Automatically closes HTML/JSX tags
+formulahendry.auto-rename-tag                # Automatically renames paired HTML/JSX tags
+zignd.html-css-class-completion              # CSS class name completion in HTML/JSX
+
+# Tailwind CSS (uncomment if you use Tailwind)
+bradlc.vscode-tailwindcss                    # Tailwind CSS IntelliSense
+
+# Testing
+vitest.explorer                              # Vitest test explorer (modern test runner)
+firsttris.vscode-jest-runner                 # Run Jest tests from editor
+ms-playwright.playwright                     # Playwright testing support
+
+# Python
+anysphere.cursorpyright                      # Cursor's Python language server (Pylance alternative)
+ms-python.python                             # Python language support
+ms-python.debugpy                            # Python debugger
+
+# Frameworks
+astro-build.astro-vscode                     # Astro framework support
+unifiedjs.vscode-mdx                         # MDX (Markdown + JSX) support
+
+# TypeScript
+typescriptteam.native-preview                # TypeScript native preview
+
+# ============================================================================
+# CODE QUALITY & LINTING
+# ============================================================================
+sonarsource.sonarlint-vscode                 # Code quality and security analysis
+editorconfig.editorconfig                    # EditorConfig support (team consistency)
+davidanson.vscode-markdownlint               # Markdown linting
+timonwong.shellcheck                         # Shell script linting
+
+# ============================================================================
+# DEVELOPER EXPERIENCE ENHANCEMENTS
+# ============================================================================
+streetsidesoftware.code-spell-checker        # Spell checking for code
+gruntfuggly.todo-tree                         # Highlights and lists TODO/FIXME comments
+oderwat.indent-rainbow                       # Colorful indentation guide
+naumovs.color-highlight                      # Highlights color codes in code
+kisstkondoros.vscode-gutter-preview          # Image preview in gutter
+aaron-bond.better-comments                   # Better comment highlighting
+
+# ============================================================================
+# GIT & VERSION CONTROL
+# ============================================================================
+eamodio.gitlens                              # Git supercharged (blame, history, etc.)
+mhutchie.git-graph                           # Visualize git graph
+vivaxy.vscode-conventional-commits           # Conventional commit message helper
+donjayamanne.githistory                      # View git log, file history, compare branches
+
+# ============================================================================
+# UTILITIES & HELPERS
+# ============================================================================
+mikestead.dotenv                             # .env file syntax highlighting
+tamasfe.even-better-toml                     # TOML file support
+redhat.vscode-yaml                           # YAML language support
+# netcorext.uuid-generator                    # Generate UUIDs (NOT AVAILABLE in Cursor marketplace)
+wmaurer.change-case                          # Transform text case (camelCase, kebab-case, etc.)
+# mariusalchimavicius.json-to-ts             # Convert JSON to TypeScript interfaces (NOT AVAILABLE in Cursor marketplace)
+
+# ============================================================================
+# MARKDOWN & DOCUMENTATION
+# ============================================================================
+yzhang.markdown-all-in-one                   # All-in-one Markdown support
+bierner.markdown-mermaid                     # Mermaid diagram support in Markdown
+# bierner.github-markdown-preview            # GitHub-style Markdown preview (NOT AVAILABLE in Cursor marketplace, use markdown-all-in-one instead)
+
+# ============================================================================
+# DOCKER & CONTAINERS
+# ============================================================================
+ms-azuretools.vscode-docker                  # Docker support (if you use Docker/OrbStack)
+
+# ============================================================================
+# OPTIONAL - Visual/Themes
+# ============================================================================
+# pkief.material-icon-theme                  # Material icon theme
+# pkief.material-product-icons               # Material product icons
+
+# ============================================================================
+# OPTIONAL - Other Languages
+# ============================================================================
+# ms-vscode.powershell                        # PowerShell language support
+
+# ============================================================================
+# BUILT INTO CURSOR (Do not install)
+# ============================================================================
+# anthropic.claude-code                      # Built into Cursor (no need to install)
+

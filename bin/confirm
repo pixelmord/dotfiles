@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Description: Prompt user for y/n confirmation
+
+read -r -n 1 -p "$1 (y/n) " answer
+echo ""
+test "$answer" = "y"
