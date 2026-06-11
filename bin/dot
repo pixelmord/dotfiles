@@ -627,8 +627,9 @@ cmd_link_clean() {
   fmt_title_underline "Cleaning up broken symlinks"
 
   local broken_count=0
+  local pruned_dirs=0
 
-  # Check config directory symlinks
+  # 1) Config home: every symlink here was created by us, so any broken one is ours.
   if [ -d "$CONFIG_HOME" ]; then
     while IFS= read -r -d '' link; do
       if [ -L "$link" ] && [ ! -e "$link" ]; then
@@ -643,48 +644,79 @@ cmd_link_clean() {
     done < <(find "$CONFIG_HOME" -type l -print0 2>/dev/null || true)
   fi
 
-  # Check home directory symlinks created from $DOTFILES/home
+  # 2) Home tree: walk each top-level mirror dir recursively. Scan roots come from
+  #    $DOTFILES/home's top-level entries — independent of whether deeper source
+  #    files still exist, so fully-removed subtrees still get cleaned.
   if [ -d "$DOTFILES/home" ]; then
-    # Get all directories that contain files in $DOTFILES/home
-    local home_dirs=()
-    while IFS= read -r -d '' file; do
-      local dir_path="$HOME/$(dirname "${file#"$DOTFILES"/home/}")"
-      # Add to array if not already present
-      if [[ ! " ${home_dirs[@]} " =~ " ${dir_path} " ]]; then
-        home_dirs+=("$dir_path")
+    local scan_roots=()
+    while IFS= read -r -d '' entry; do
+      local rel="${entry#"$DOTFILES"/home/}"
+      local top="${rel%%/*}"
+      local mirror="$HOME/$top"
+      if [[ ! " ${scan_roots[*]} " =~ " ${mirror} " ]]; then
+        scan_roots+=("$mirror")
       fi
-    done < <(find "$DOTFILES/home" -type f -print0)
+    done < <(find "$DOTFILES/home" -mindepth 1 -maxdepth 1 -print0)
 
-    # Now check for broken symlinks only in those directories
-    for dir in "${home_dirs[@]}"; do
-      if [ -d "$dir" ]; then
-        while IFS= read -r -d '' link; do
-          if [ -L "$link" ] && [ ! -e "$link" ]; then
-            # Check if this broken symlink points to our dotfiles directory
-            local link_target=$(readlink "$link")
-            if [[ "$link_target" == "$DOTFILES"* ]]; then
-              broken_count=$((broken_count + 1))
-              if [ "$dry_run" = true ]; then
-                log_warning "[DRY RUN] Would remove broken symlink: ~${link#"$HOME"}"
-              else
-                [ "$verbose" = true ] && log_info "Removing broken symlink: ~${link#"$HOME"}"
-                rm "$link"
-              fi
+    # Track parent dirs of removed symlinks — only those are candidates for pruning.
+    local -a touched_dirs=()
+    for root in "${scan_roots[@]}"; do
+      [ -e "$root" ] || [ -L "$root" ] || continue
+      while IFS= read -r -d '' link; do
+        if [ -L "$link" ] && [ ! -e "$link" ]; then
+          local link_target
+          link_target=$(readlink "$link")
+          if [[ "$link_target" == "$DOTFILES"* ]]; then
+            broken_count=$((broken_count + 1))
+            if [ "$dry_run" = true ]; then
+              log_warning "[DRY RUN] Would remove broken symlink: ~${link#"$HOME"}"
+            else
+              [ "$verbose" = true ] && log_info "Removing broken symlink: ~${link#"$HOME"}"
+              rm "$link"
+              touched_dirs+=("$(dirname "$link")")
             fi
           fi
-        done < <(find "$dir" -maxdepth 1 -type l -print0 2>/dev/null || true)
-      fi
+        fi
+      done < <(find "$root" -type l -print0 2>/dev/null || true)
     done
+
+    # Prune only directories we just emptied (and their now-empty ancestors,
+    # walking up until we hit $HOME, a scan root, or a non-empty dir).
+    if [ "$dry_run" = false ] && [ "${#touched_dirs[@]}" -gt 0 ]; then
+      local -A seen=()
+      local dir
+      for dir in "${touched_dirs[@]}"; do
+        while [ -n "$dir" ] && [ "$dir" != "$HOME" ] && [ "$dir" != "/" ]; do
+          # Stop if this dir is itself a scan root — never remove a top-level mirror.
+          local is_root=false
+          local r
+          for r in "${scan_roots[@]}"; do
+            [ "$dir" = "$r" ] && is_root=true && break
+          done
+          [ "$is_root" = true ] && break
+          [ -n "${seen[$dir]:-}" ] && break
+          seen[$dir]=1
+          if rmdir "$dir" 2>/dev/null; then
+            pruned_dirs=$((pruned_dirs + 1))
+            [ "$verbose" = true ] && log_info "Pruned empty dir: ~${dir#"$HOME"}"
+            dir="$(dirname "$dir")"
+          else
+            break
+          fi
+        done
+      done
+    fi
   fi
 
   echo
-  if [ "$broken_count" -eq 0 ]; then
+  if [ "$broken_count" -eq 0 ] && [ "$pruned_dirs" -eq 0 ]; then
     log_success "No broken symlinks found"
   else
     if [ "$dry_run" = true ]; then
       log_info "Found $broken_count broken symlink(s). Run without --dry-run to remove them."
     else
-      log_success "Removed $broken_count broken symlink(s)"
+      [ "$broken_count" -gt 0 ] && log_success "Removed $broken_count broken symlink(s)"
+      [ "$pruned_dirs" -gt 0 ] && log_success "Pruned $pruned_dirs empty directory/ies"
     fi
   fi
 }
@@ -701,11 +733,16 @@ cmd_link() {
   fi
 
   local verbose=false
+  local auto_clean=true
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
     -v | --verbose)
       verbose=true
+      shift
+      ;;
+    --no-clean)
+      auto_clean=false
       shift
       ;;
     *)
@@ -770,6 +807,16 @@ cmd_link() {
     else
       log_error "Package $pkg not found in config directory"
       return 1
+    fi
+  fi
+
+  # After linking, prune symlinks whose source was removed from $DOTFILES.
+  if [ "$operation" = "link" ] && [ "$auto_clean" = true ]; then
+    echo
+    if [ "$verbose" = true ]; then
+      cmd_link_clean -v
+    else
+      cmd_link_clean
     fi
   fi
 
