@@ -177,7 +177,7 @@ done
 unset file
 
 # setup PATH
-for dir in $HOME/.cargo/bin $HOME/.local/bin /usr/local/opt/grep/libexec/gnubin /opt/homebrew/opt/libxml2/bin /opt/homebrew/opt/libpq/bin /usr/local/sbin /usr/local/bin $DOTFILES/bin $HOME/bin $HOME/.volta/bin; do
+for dir in $HOME/.cargo/bin $HOME/.local/bin /usr/local/opt/grep/libexec/gnubin /opt/homebrew/opt/libxml2/bin /opt/homebrew/opt/libpq/bin /usr/local/sbin /usr/local/bin $DOTFILES/bin $HOME/bin; do
   prepend_path $dir
 done
 
@@ -253,3 +253,6 @@ source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 source /opt/homebrew/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh
 
 [[ -f "$HOME/.zshrc.local" ]] && source $HOME/.zshrc.local
+
+# Vite+ bin (https://viteplus.dev)
+. "$HOME/.vite-plus/env"

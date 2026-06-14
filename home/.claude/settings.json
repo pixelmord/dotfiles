@@ -38,8 +38,7 @@
       "TodoWrite(*)",
       "WebFetch(domain:*)",
       "WebSearch",
-      "Write(*)",
-      "mcp__*"
+      "Write(*)"
     ],
     "deny": [
       "Read(./.env)",
@@ -79,8 +78,10 @@
       "Bash(rm -rf ~)",
       "Bash(sudo rm -rf /)",
       "Bash(sudo rm -rf /*)"
-    ]
+    ],
+    "defaultMode": "auto"
   },
+  "model": "opus[1m]",
   "hooks": {
     "PreToolUse": [
       {
@@ -130,7 +131,30 @@
   "enabledPlugins": {
     "frontend-design@claude-plugins-official": true,
     "code-review@claude-plugins-official": true,
-    "ralph-loop@claude-plugins-official": true
+    "ralph-loop@claude-plugins-official": false,
+    "chrome-devtools-mcp@chrome-devtools-plugins": true
   },
-  "alwaysThinkingEnabled": true
+  "extraKnownMarketplaces": {
+    "fallow-skills": {
+      "source": {
+        "source": "github",
+        "repo": "fallow-rs/fallow-skills"
+      }
+    },
+    "chrome-devtools-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "ChromeDevTools/chrome-devtools-mcp"
+      }
+    },
+    "understand-anything": {
+      "source": {
+        "source": "github",
+        "repo": "Lum1104/Understand-Anything"
+      }
+    }
+  },
+  "alwaysThinkingEnabled": true,
+  "effortLevel": "medium",
+  "skipAutoPermissionPrompt": true
 }
