@@ -81,14 +81,34 @@
     ],
     "defaultMode": "auto"
   },
-  "model": "opus[1m]",
   "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/andreas.adam/workspace/@personal/dotfiles/bin/claude-status-hook Notification"
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
       {
         "hooks": [
           {
             "type": "command",
             "command": "/Users/andreas.adam/workspace/@personal/dotfiles/bin/claude-status-hook PreToolUse"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/andreas.adam/.local/bin/mempalace hook run --hook session-end --harness claude-code",
+            "timeout": 120
           }
         ]
       }
@@ -112,16 +132,6 @@
           }
         ]
       }
-    ],
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/andreas.adam/workspace/@personal/dotfiles/bin/claude-status-hook Notification"
-          }
-        ]
-      }
     ]
   },
   "statusLine": {
@@ -129,22 +139,23 @@
     "command": "claude-statusline"
   },
   "enabledPlugins": {
-    "frontend-design@claude-plugins-official": true,
+    "chrome-devtools-mcp@chrome-devtools-plugins": true,
     "code-review@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
     "ralph-loop@claude-plugins-official": false,
-    "chrome-devtools-mcp@chrome-devtools-plugins": true
+    "mempalace@mempalace": true
   },
   "extraKnownMarketplaces": {
-    "fallow-skills": {
-      "source": {
-        "source": "github",
-        "repo": "fallow-rs/fallow-skills"
-      }
-    },
     "chrome-devtools-plugins": {
       "source": {
         "source": "github",
         "repo": "ChromeDevTools/chrome-devtools-mcp"
+      }
+    },
+    "fallow-skills": {
+      "source": {
+        "source": "github",
+        "repo": "fallow-rs/fallow-skills"
       }
     },
     "understand-anything": {
@@ -152,9 +163,16 @@
         "source": "github",
         "repo": "Lum1104/Understand-Anything"
       }
+    },
+    "mempalace": {
+      "source": {
+        "source": "github",
+        "repo": "MemPalace/mempalace"
+      }
     }
   },
   "alwaysThinkingEnabled": true,
   "effortLevel": "medium",
+  "tui": "fullscreen",
   "skipAutoPermissionPrompt": true
 }
