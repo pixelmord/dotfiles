@@ -1,0 +1,262 @@
+#!/usr/bin/env bash
+# Description: Sync tool-managed config files (snapshot <-> live)
+
+# Tool-managed files (see CONTEXT.md) are owned by an external app that rewrites
+# them atomically, which destroys symlinks. Instead of linking, we keep a
+# normalized *snapshot* in the repo and reconcile it with the live file:
+#   capture  live  -> repo   (strip tool noise, contract $HOME/$DOTFILES paths)
+#   seed     repo  -> live   (expand paths; overwrite-if-absent, or --force)
+#   status   diff snapshot vs live in normalized space (--nudge = throttled)
+# See docs/adr/0001-tool-managed-files-sync-not-symlink.md.
+
+set -Eeuo pipefail
+
+# Guard before sourcing: a cryptic "No such file" from the source line below is
+# a bad first impression on a half-set-up machine. Fail with a clear message.
+if [ -z "${DOTFILES:-}" ]; then
+  echo "dot sync: \$DOTFILES is not set — run 'export DOTFILES=<repo path>' or source ~/.zshenv" >&2
+  exit 1
+fi
+source "$DOTFILES/bin/lib/common.sh"
+command_name=$(basename "${BASH_SOURCE[0]}")
+
+NUDGE_INTERVAL_DAYS=14
+NUDGE_MARKER="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/sync-nudge"
+
+# ---------------------------------------------------------------------------
+# Registry of tool-managed files.  One row per file:  name|live|snapshot|type
+# `type` selects the clean/normalize rule below.  Add a row (and a rule, if the
+# app needs one) to manage another file — no new script.
+# ---------------------------------------------------------------------------
+registry() {
+  cat <<EOF
+claude-settings|$HOME/.claude/settings.json|$DOTFILES/home/.claude/settings.json|claude
+EOF
+}
+
+registry_lookup() {
+  # $1 = name; prints "live|snapshot|type" or returns 1
+  local name="$1" row
+  while IFS= read -r row; do
+    [ -z "$row" ] && continue
+    if [ "${row%%|*}" = "$name" ]; then
+      printf '%s\n' "${row#*|}"
+      return 0
+    fi
+  done < <(registry)
+  return 1
+}
+
+usage() {
+  cat <<EOF
+  $(fmt_key "Usage:") $(fmt_cmd "$command_name") $(fmt_value "<command> [name] [options]")
+
+  Sync tool-managed config files between the live machine and the repo snapshot.
+
+Commands:
+    capture [name]        Snapshot live file(s) into the repo (normalized). No commit.
+    seed [name] [--force] Write repo snapshot to the live path (expand paths).
+                          Overwrite-if-absent; --force replaces an existing file.
+    status [--nudge]      Report drift between snapshot and live.
+                          --nudge: throttled ($NUDGE_INTERVAL_DAYS-day), quiet-when-clean, for shell startup.
+    -h, --help            Show this help
+
+  With no [name], capture/status act on every registered file.
+  Registered: $(registry | cut -d'|' -f1 | paste -sd' ' -)
+EOF
+}
+
+# ---------------------------------------------------------------------------
+# Requirements gate.  Sync depends on tools installed by `brew bundle`; on a
+# fresh machine it must refuse to run rather than explode half-way.
+# ---------------------------------------------------------------------------
+require_deps() {
+  local missing=()
+  [ -n "${DOTFILES:-}" ] || missing+=("\$DOTFILES env var (source ~/.zshenv or export it)")
+  command -v python3 >/dev/null 2>&1 || missing+=("python3 (brew bundle / brew install python)")
+  if [ ${#missing[@]} -gt 0 ]; then
+    log_error "dot sync requirements not met:"
+    local m
+    for m in "${missing[@]}"; do printf '    - %s\n' "$m" >&2; done
+    log_error "Run this only after 'brew bundle' has completed. See docs/agents/ and README."
+    exit 1
+  fi
+}
+
+# normalize <live-path> <type>  -> normalized snapshot JSON on stdout
+# Strips tool noise and contracts machine paths to $HOME/$DOTFILES placeholders.
+normalize() {
+  local src="$1" type="$2"
+  DOT_TYPE="$type" python3 - "$src" <<'PY'
+import json, os, sys
+src, typ = sys.argv[1], os.environ["DOT_TYPE"]
+home = os.path.expanduser("~")
+dotfiles = os.path.realpath(os.environ["DOTFILES"])
+with open(src) as f:
+    data = json.load(f)
+
+if typ == "claude":
+    hooks = data.get("hooks", {})
+    for event in list(hooks):
+        groups = []
+        for g in hooks[event]:
+            kept = [c for c in g.get("hooks", [])
+                    if "# supacode-managed-hook" not in c.get("command", "")]
+            if kept:
+                g = dict(g); g["hooks"] = kept; groups.append(g)
+        if groups:
+            hooks[event] = groups
+        else:
+            del hooks[event]
+
+# Canonical serialization -> stable diffs regardless of how the app ordered keys.
+s = json.dumps(data, indent=2, sort_keys=True)
+# Contract machine-specific roots. $DOTFILES first: it may live under $HOME.
+s = s.replace(dotfiles, "$DOTFILES").replace(home, "$HOME")
+print(s)
+PY
+}
+
+# expand <snapshot-path> -> live JSON (placeholders -> this machine's paths) on stdout
+expand() {
+  local snap="$1"
+  python3 - "$snap" <<'PY'
+import os, sys
+home = os.path.expanduser("~")
+dotfiles = os.path.realpath(os.environ["DOTFILES"])
+with open(sys.argv[1]) as f:
+    s = f.read()
+sys.stdout.write(s.replace("$DOTFILES", dotfiles).replace("$HOME", home))
+PY
+}
+
+cmd_capture() {
+  local only="${1:-}"
+  local rows=0 changed=0 row name rest live snap type tmp
+  while IFS= read -r row; do
+    [ -z "$row" ] && continue
+    name="${row%%|*}"; rest="${row#*|}"
+    live="${rest%%|*}"; rest="${rest#*|}"
+    snap="${rest%%|*}"; type="${rest#*|}"
+    [ -n "$only" ] && [ "$only" != "$name" ] && continue
+    rows=$((rows + 1))
+    if [ ! -f "$live" ]; then
+      log_warning "$name: live file missing ($(fmt_path "$live")) — skipping"
+      continue
+    fi
+    tmp="$(mktemp)"
+    normalize "$live" "$type" > "$tmp"
+    if [ -f "$snap" ] && diff -q "$snap" "$tmp" >/dev/null 2>&1; then
+      log_info "$name: already in sync"
+    else
+      mkdir -p "$(dirname "$snap")"
+      [ -f "$snap" ] && diff -u "$snap" "$tmp" | sed -n '1,40p' || true
+      mv "$tmp" "$snap"
+      log_success "$name: snapshot updated ($(fmt_path "${snap#"$DOTFILES/"}")) — review & commit"
+      changed=$((changed + 1))
+    fi
+    rm -f "$tmp"
+  done < <(registry)
+  [ "$rows" -eq 0 ] && { log_error "No such registered file: $only"; exit 1; }
+  [ "$changed" -eq 0 ] && log_success "Nothing to capture — all snapshots current"
+}
+
+cmd_seed() {
+  local only="" force=false a
+  for a in "$@"; do
+    case "$a" in
+    --force) force=true ;;
+    -*) log_error "Unknown option: $a"; exit 1 ;;
+    *) only="$a" ;;
+    esac
+  done
+  local rows=0 row name rest live snap type
+  while IFS= read -r row; do
+    [ -z "$row" ] && continue
+    name="${row%%|*}"; rest="${row#*|}"
+    live="${rest%%|*}"; rest="${rest#*|}"
+    snap="${rest%%|*}"; type="${rest#*|}"
+    [ -n "$only" ] && [ "$only" != "$name" ] && continue
+    rows=$((rows + 1))
+    if [ ! -f "$snap" ]; then
+      log_warning "$name: no snapshot in repo — nothing to seed"
+      continue
+    fi
+    if [ -e "$live" ] && [ "$force" != true ]; then
+      log_info "$name: live file exists — skipping (use --force to overwrite)"
+      continue
+    fi
+    mkdir -p "$(dirname "$live")"
+    expand "$snap" > "$live"
+    log_success "$name: seeded $(fmt_path "$live")"
+  done < <(registry)
+  [ "$rows" -eq 0 ] && { log_error "No such registered file: $only"; exit 1; }
+}
+
+# Returns 0 if any file drifted; sets DRIFTED to the space-joined names.
+# Always a real normalized content comparison — no mtime shortcut, because a
+# freshly written or git-checked-out snapshot can be newer than an unchanged
+# live file, which an mtime gate would misread as "in sync".
+_scan_drift() {
+  DRIFTED=""
+  local row name rest live snap type tmp
+  while IFS= read -r row; do
+    [ -z "$row" ] && continue
+    name="${row%%|*}"; rest="${row#*|}"
+    live="${rest%%|*}"; rest="${rest#*|}"
+    snap="${rest%%|*}"; type="${rest#*|}"
+    [ -f "$live" ] || continue
+    [ -f "$snap" ] || { DRIFTED="$DRIFTED $name"; continue; }
+    tmp="$(mktemp)"
+    normalize "$live" "$type" > "$tmp"
+    diff -q "$snap" "$tmp" >/dev/null 2>&1 || DRIFTED="$DRIFTED $name"
+    rm -f "$tmp"
+  done < <(registry)
+  DRIFTED="${DRIFTED# }"
+  [ -n "$DRIFTED" ]
+}
+
+cmd_status() {
+  local nudge=false
+  [ "${1:-}" = "--nudge" ] && nudge=true
+
+  if [ "$nudge" = true ]; then
+    # Throttle first (single stat, the common path): bounds how often we scan.
+    # The marker is a "last checked" timestamp, refreshed on every scan below —
+    # so we spawn python3 at most once per interval, not on every shell startup.
+    if [ -f "$NUDGE_MARKER" ]; then
+      local age_days
+      age_days=$(( ( $(date +%s) - $(stat -f %m "$NUDGE_MARKER" 2>/dev/null || echo 0) ) / 86400 ))
+      [ "$age_days" -lt "$NUDGE_INTERVAL_DAYS" ] && return 0
+    fi
+    if _scan_drift; then
+      local n
+      for n in $DRIFTED; do
+        printf '%s %s drifted — run: %s\n' "⚠" "$n" "dot sync capture $n" >&2
+      done
+    fi
+    mkdir -p "$(dirname "$NUDGE_MARKER")"
+    : > "$NUDGE_MARKER"   # reset the interval whether clean or drifted
+    return 0
+  fi
+
+  if _scan_drift; then
+    log_warning "Drifted: $DRIFTED"
+    log_info "Capture with: $(fmt_cmd "dot sync capture <name>")"
+    return 0
+  fi
+  log_success "All tool-managed files in sync"
+}
+
+main() {
+  local subcmd="${1:-}"; shift || true
+  case "$subcmd" in
+  -h | --help | "") usage; exit 0 ;;
+  capture) require_deps; cmd_capture "$@" ;;
+  seed) require_deps; cmd_seed "$@" ;;
+  status) require_deps; cmd_status "$@" ;;
+  *) log_error "Unknown command: $subcmd"; usage; exit 1 ;;
+  esac
+}
+
+main "$@"

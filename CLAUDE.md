@@ -71,6 +71,11 @@ dot macos defaults           # Apply macOS system preferences
 dot shell change             # Set default shell to zsh
 dot update all               # Update nvim plugins, homebrew, dotfiles
 dot cursor sync              # Sync Cursor editor extensions
+
+# Tool-managed config files (see below) — snapshot <-> live, not symlinked
+dot sync status              # Report drift between repo snapshot and live file
+dot sync capture <name>      # Snapshot live file into repo (normalized, no commit)
+dot sync seed <name>         # Write repo snapshot to live path (bootstrap)
 ```
 
 ### Shell Shortcuts
@@ -118,6 +123,17 @@ $DOTFILES/home/.zshenv ──symlink──▶  ~/.zshenv
 1. **Base config**: `$DOTFILES/config/*` (version controlled)
 2. **Local overrides**: `~/.zshrc.local`, `~/.gitconfig.local` (not committed)
 3. **Machine secrets**: `~/.ssh`, `~/.gnupg`, `~/.aws` (backed up separately)
+
+### Owned vs tool-managed files (important)
+Two distinct classes — see `CONTEXT.md` and `docs/adr/0001-*`:
+- **Owned files**: repo is source of truth, symlinked into `$HOME`. Editing means
+  editing the repo (`CLAUDE.md`, zsh/git config, `agents/*`).
+- **Tool-managed files**: an app rewrites them atomically, which destroys
+  symlinks (e.g. `~/.claude/settings.json`, written by Claude Code + supacode).
+  These are **not symlinked**. The repo holds a normalized snapshot reconciled
+  via `dot sync` (`capture` live→repo, `seed` repo→live). Do NOT try to symlink
+  them or edit the snapshot expecting it to go live — capture from the app.
+  Snapshots strip supacode hooks and contract `$HOME`/`$DOTFILES` paths.
 
 ## Project Structure
 

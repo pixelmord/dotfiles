@@ -1,7 +1,95 @@
 {
+  "alwaysThinkingEnabled": true,
   "attribution": {
     "commit": "",
     "pr": ""
+  },
+  "effortLevel": "medium",
+  "enabledPlugins": {
+    "chrome-devtools-mcp@chrome-devtools-plugins": true,
+    "code-review@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "mempalace@mempalace": true,
+    "ralph-loop@claude-plugins-official": false
+  },
+  "extraKnownMarketplaces": {
+    "chrome-devtools-plugins": {
+      "source": {
+        "repo": "ChromeDevTools/chrome-devtools-mcp",
+        "source": "github"
+      }
+    },
+    "fallow-skills": {
+      "source": {
+        "repo": "fallow-rs/fallow-skills",
+        "source": "github"
+      }
+    },
+    "mempalace": {
+      "source": {
+        "repo": "MemPalace/mempalace",
+        "source": "github"
+      }
+    },
+    "understand-anything": {
+      "source": {
+        "repo": "Lum1104/Understand-Anything",
+        "source": "github"
+      }
+    }
+  },
+  "hooks": {
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "command": "$DOTFILES/bin/claude-status-hook Notification",
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "$DOTFILES/bin/claude-status-hook PreToolUse",
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "command": "$HOME/.local/bin/mempalace hook run --hook session-end --harness claude-code",
+            "timeout": 120,
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "command": "$DOTFILES/bin/claude-status-hook Stop",
+            "type": "command"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "command": "$DOTFILES/bin/claude-status-hook SubagentStop",
+            "type": "command"
+          }
+        ]
+      }
+    ]
   },
   "permissions": {
     "allow": [
@@ -40,6 +128,7 @@
       "WebSearch",
       "Write(*)"
     ],
+    "defaultMode": "auto",
     "deny": [
       "Read(./.env)",
       "Read(./.env.*)",
@@ -78,101 +167,12 @@
       "Bash(rm -rf ~)",
       "Bash(sudo rm -rf /)",
       "Bash(sudo rm -rf /*)"
-    ],
-    "defaultMode": "auto"
-  },
-  "hooks": {
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/andreas.adam/workspace/@personal/dotfiles/bin/claude-status-hook Notification"
-          }
-        ]
-      }
-    ],
-    "PreToolUse": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/andreas.adam/workspace/@personal/dotfiles/bin/claude-status-hook PreToolUse"
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/andreas.adam/.local/bin/mempalace hook run --hook session-end --harness claude-code",
-            "timeout": 120
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/andreas.adam/workspace/@personal/dotfiles/bin/claude-status-hook Stop"
-          }
-        ]
-      }
-    ],
-    "SubagentStop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "/Users/andreas.adam/workspace/@personal/dotfiles/bin/claude-status-hook SubagentStop"
-          }
-        ]
-      }
     ]
   },
+  "skipAutoPermissionPrompt": true,
   "statusLine": {
-    "type": "command",
-    "command": "claude-statusline"
+    "command": "claude-statusline",
+    "type": "command"
   },
-  "enabledPlugins": {
-    "chrome-devtools-mcp@chrome-devtools-plugins": true,
-    "code-review@claude-plugins-official": true,
-    "frontend-design@claude-plugins-official": true,
-    "ralph-loop@claude-plugins-official": false,
-    "mempalace@mempalace": true
-  },
-  "extraKnownMarketplaces": {
-    "chrome-devtools-plugins": {
-      "source": {
-        "source": "github",
-        "repo": "ChromeDevTools/chrome-devtools-mcp"
-      }
-    },
-    "fallow-skills": {
-      "source": {
-        "source": "github",
-        "repo": "fallow-rs/fallow-skills"
-      }
-    },
-    "understand-anything": {
-      "source": {
-        "source": "github",
-        "repo": "Lum1104/Understand-Anything"
-      }
-    },
-    "mempalace": {
-      "source": {
-        "source": "github",
-        "repo": "MemPalace/mempalace"
-      }
-    }
-  },
-  "alwaysThinkingEnabled": true,
-  "effortLevel": "medium",
-  "tui": "fullscreen",
-  "skipAutoPermissionPrompt": true
+  "tui": "fullscreen"
 }

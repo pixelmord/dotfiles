@@ -41,13 +41,23 @@ The backup includes:
 
 ## Setting Up a New Machine
 
-### 1. Clone the repo
+> **Bootstrap ordering matters.** The steps below are ordered to avoid two
+> chicken-and-egg traps: (1) cloning over SSH needs keys you haven't restored
+> yet, so the first clone uses **HTTPS**; (2) the zsh config requires Oh My Zsh,
+> which must be cloned **before** linking or your first shell errors. Follow the
+> order as written.
+
+### 1. Clone the repo (HTTPS — no SSH keys yet)
 
 ```bash
-git clone git@github.com:pixelmord/dotfiles.git ~/.dotfiles
+# HTTPS works on a fresh machine before any SSH key is restored.
+git clone https://github.com/pixelmord/dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
-export DOTFILES=~/.dotfiles
+export DOTFILES="$PWD"   # matches wherever you cloned; auto-derived later via ~/.zshenv
 ```
+
+You can clone anywhere — `$DOTFILES` is re-derived from the symlinked `~/.zshenv`
+after step 4, so the location doesn't have to be `~/.dotfiles`.
 
 ### 2. Install Homebrew and packages
 
@@ -55,11 +65,21 @@ export DOTFILES=~/.dotfiles
 # Install Homebrew
 ./bin/dot homebrew install
 
-# Install packages from Brewfile
+# Install packages from Brewfile (git, gh, python, jq, coreutils, ... land here)
 brew bundle --file=Brewfile
 ```
 
-### 3. Link configuration files
+After this step the requirements for `dot link`, `dot git`, and `dot sync` are
+met (see **Requirements** below).
+
+### 3. Install Oh My Zsh (before linking)
+
+```bash
+# The zsh config sources Oh My Zsh; clone it first or the shell errors on start.
+git clone https://github.com/ohmyzsh/ohmyzsh.git "$DOTFILES/config/zsh/ohmyzsh"
+```
+
+### 4. Link configuration files
 
 ```bash
 # Link all config packages
@@ -71,19 +91,33 @@ brew bundle --file=Brewfile
 ./bin/dot link nvim
 ```
 
-### 4. Configure Git
+### 5. Seed tool-managed config files
+
+Some app config files (e.g. `~/.claude/settings.json`) can't be symlinked —
+the app rewrites them atomically and would clobber the link. These are kept as
+**snapshots** in the repo and materialized onto the machine with `dot sync seed`.
+This only writes files that don't already exist (safe to re-run).
+
+```bash
+# Requires: $DOTFILES set + python3 (both satisfied after step 2)
+./bin/dot sync seed
+```
+
+See [docs/adr/0001-tool-managed-files-sync-not-symlink.md](docs/adr/0001-tool-managed-files-sync-not-symlink.md).
+
+### 6. Configure Git
 
 ```bash
 ./bin/dot git setup
 ```
 
-### 5. Set macOS defaults
+### 7. Set macOS defaults
 
 ```bash
 ./bin/dot macos defaults
 ```
 
-### 6. Restore from backup (if migrating)
+### 8. Restore from backup (if migrating)
 
 ```bash
 # Copy secrets back
@@ -95,11 +129,14 @@ cp -r ~/dotfiles-backup/backup_*/secrets/.config/gh ~/.config/
 cp ~/dotfiles-backup/backup_*/secrets/.zshrc.local ~/
 cp ~/dotfiles-backup/backup_*/secrets/.gitconfig.local ~/
 
+# Now that SSH keys are restored, switch this repo's remote to SSH:
+git remote set-url origin git@github.com:pixelmord/dotfiles.git
+
 # Re-clone your repos using the exported list
 cat ~/dotfiles-backup/backup_*/git-repos.txt
 ```
 
-### 7. Install global packages
+### 9. Install global packages
 
 ```bash
 # npm globals
@@ -135,8 +172,37 @@ External commands (dot-*):
     homebrew                Setup Homebrew
     macos                   Configure macOS system defaults
     shell                   Setup shell configuration
+    sync                    Sync tool-managed config files (snapshot <-> live)
+        capture [name]      Snapshot live file(s) into the repo (normalized)
+        seed [name] [--force]  Write repo snapshot to the live path
+        status [--nudge]    Report drift between snapshot and live
     update                  Update all the things
 ```
+
+### Requirements
+
+Most `dot` subcommands are pure Bash and need only `$DOTFILES` set (auto-derived
+from the symlinked `~/.zshenv` once linked). Two exceptions matter during
+bootstrap:
+
+| Command       | Needs                        | Available after        |
+| ------------- | ---------------------------- | ---------------------- |
+| `dot homebrew`| network + curl               | prerequisites          |
+| `dot sync`    | `$DOTFILES` + `python3`      | `brew bundle` (step 2) |
+
+`dot sync` **refuses to run** with a clear message if `$DOTFILES` is unset or
+`python3` is missing, rather than failing halfway. This is why seeding
+(step 5) comes after `brew bundle` (step 2) in the setup order.
+
+### Owned vs tool-managed files
+
+- **Owned files** are symlinked from the repo into `$HOME` — the repo is the
+  source of truth (`CLAUDE.md`, zsh/git config, agents).
+- **Tool-managed files** are rewritten by an app (which breaks symlinks), so the
+  repo keeps a normalized **snapshot** reconciled with `dot sync` instead. Edit
+  these in the app, then `dot sync capture` to snapshot. A throttled shell nudge
+  flags drift. See [`CONTEXT.md`](CONTEXT.md) and
+  [ADR-0001](docs/adr/0001-tool-managed-files-sync-not-symlink.md).
 
 ## Directory Structure
 

@@ -72,7 +72,14 @@ zstyle ':omz:update' mode reminder  # just remind me to update when it's time
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(git direnv docker docker-compose extract)
 
-source $ZSH/oh-my-zsh.sh
+# Oh My Zsh is cloned into $ZSH during setup (git-ignored). Guard the source so
+# a fresh machine that hasn't cloned it yet still gets a working shell instead of
+# an error on every prompt. See README "Setting Up a New Machine".
+if [[ -f "$ZSH/oh-my-zsh.sh" ]]; then
+  source "$ZSH/oh-my-zsh.sh"
+else
+  printf '\033[33m⚠ Oh My Zsh not found at %s — run: git clone https://github.com/ohmyzsh/ohmyzsh.git "%s"\033[0m\n' "$ZSH" "$ZSH" >&2
+fi
 
 # User configuration
 
@@ -256,3 +263,10 @@ source /opt/homebrew/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh
 
 # Vite+ bin (https://viteplus.dev)
 . "$HOME/.vite-plus/env"
+
+# Nudge if a tool-managed config file has drifted from its repo snapshot
+# (see `dot sync` / docs/adr/0001). Throttled to every 14 days, silent when
+# clean, and guarded so it can never block or slow shell startup.
+if command -v dot &>/dev/null; then
+  dot sync status --nudge || true
+fi
