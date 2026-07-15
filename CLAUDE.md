@@ -393,3 +393,17 @@ dot link clean --dry-run -v
 - [nicknisi/dotfiles](https://github.com/nicknisi/dotfiles) - Primary inspiration (XDG structure, dot command)
 - [paulirish/dotfiles](https://github.com/paulirish/dotfiles/)
 - [mathiasbynens/dotfiles](https://github.com/mathiasbynens/dotfiles/)
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in the `pixelmord/dotfiles` GitHub Issues, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default canonical labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
