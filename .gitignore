@@ -15,3 +15,7 @@ config/ghostty/overrides
 node_modules/
 build/
 config/karabiner/automatic_backups/
+
+# MemPalace per-project files (issue #185)
+mempalace.yaml
+entities.json
