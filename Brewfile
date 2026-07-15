@@ -14,7 +14,7 @@ if OS.mac?
   cask 'wezterm'                       # a better terminal emulator
   # cask 'karabiner-elements'            # keyboard customizer
   # cask 'nikitabobko/tap/aerospace'     # a tiling window manager
-  cask 'claude-code'                   # Claude AI CLI
+  cask 'claude-code@latest'            # Claude AI CLI (latest track)
 
   # Fonts
   cask 'font-symbols-only-nerd-font'   # nerd-only symbols font
@@ -25,12 +25,14 @@ if OS.mac?
   # ============================================================================
   # Web Browsers
   cask 'google-chrome'                   # Google Chrome browser
+  cask 'microsoft-edge'                  # Microsoft Edge browser
+  cask 'helium-browser'                  # Chromium-based web browser
   # cask 'firefox@developer-edition'      # Firefox Developer Edition
-  # cask 'microsoft-edge'                 # Microsoft Edge browser
   # cask 'arc'                            # Arc browser
 
   # Development Tools
   # cask 'visual-studio-code'             # VS Code editor
+  cask 'visual-studio-code@insiders'     # VS Code Insiders build
   cask 'cursor'                          # Cursor editor (AI-powered)
   cask 'codex'                           # AI code completion
   cask 'zed'                             # Zed editor (high-performance)
@@ -41,8 +43,14 @@ if OS.mac?
   cask 'ngrok'                           # secure tunnels to localhost
 
   # Terminal & Shell
+  cask 'supacode'                        # native terminal coding agents command center
+  cask 'cmux'                            # Ghostty-based terminal for AI coding agents
   # cask 'iterm2'                         # iTerm2 terminal emulator
   # cask 'tabby'                          # Tabby terminal
+
+  # AI Assistants
+  cask 'claude'                          # Anthropic's official Claude AI desktop app
+  cask 'google-gemini'                   # native desktop AI assistant from Google
 
   # Productivity
   cask 'raycast'                         # productivity launcher
@@ -55,6 +63,8 @@ if OS.mac?
 
   # Design & Media
   cask 'figma'                           # design tool
+  cask 'affinity'                        # image editing and design software
+  cask 'kap'                             # open-source screen recorder
   # cask 'handbrake-app'                  # video transcoder
   # cask 'vlc'                            # media player
   # cask 'flameshot'                      # screenshot tool
@@ -67,6 +77,11 @@ if OS.mac?
   cask 'caffeine'                        # prevent sleep
   cask 'block-goose'                     # ad blocker
   cask 'antigravity'                     # window management utility
+  cask 'alt-tab'                          # Windows-like alt-tab window switcher
+  cask 'stats'                            # system monitor for the menu bar
+  cask 'time-out'                         # customizable break reminders
+  cask 'keycastr'                         # keystroke visualiser
+  cask 'android-file-transfer'            # transfer files to/from Android devices
   # cask 'duet'                           # use iPad as second display
   # cask 'rustdesk'                       # remote desktop software
   # cask 'zoom'                           # video conferencing
@@ -91,6 +106,13 @@ if OS.mac?
 
   # Microsoft
   cask 'microsoft-auto-update'          # Microsoft AutoUpdate
+  cask 'microsoft-outlook'              # Outlook email client
+  cask 'onedrive'                       # OneDrive cloud storage client
+
+  # 3D Printing
+  cask 'bambu-studio'                   # 3D model slicer for Bambu Lab printers
+  cask 'snapmaker-orca'                 # OrcaSlicer fork for Snapmaker printers
+  cask 'snapmaker-luban'               # Snapmaker 3D printing software
 
   # Other
   cask 'balenaetcher'                   # flash OS images to SD cards
@@ -175,6 +197,7 @@ brew 'tldr'                            # simplified man pages
 brew 'gh'                              # GitHub CLI
 brew 'git-delta'                       # a better git diff
 brew 'lazygit'                         # a better git UI
+brew 'git-filter-repo'                 # quickly rewrite git repository history
 
 # ============================================================================
 # PROGRAMMING LANGUAGES & RUNTIMES
@@ -184,6 +207,7 @@ brew 'fnm'                             # Fast Node version manager
 brew 'volta'                           # JavaScript tool manager
 brew 'uv'                              # Fast Python package installer
 brew 'bun'                             # Bun JavaScript runtime
+brew 'pnpm'                            # fast, disk-space-efficient package manager
 brew 'pyenv'                           # Python version manager
 # brew 'elixir'                          # Elixir programming language
 brew 'rbenv'                           # Ruby version manager
@@ -214,6 +238,7 @@ brew 'yq'                              # YAML processor (like jq for YAML)
 # ============================================================================
 brew 'mtr'                             # network diagnostic tool
 brew 'nmap'                            # network exploration and security auditing
+brew 'unbound'                         # validating, recursive DNS resolver
 brew 'watch'                           # execute a program periodically
 brew 'watchman'                        # file watching service (used by many dev tools)
 
