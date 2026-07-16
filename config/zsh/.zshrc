@@ -177,6 +177,13 @@ zstyle ':completion:*:messages' format '%d'
 zstyle ':completion:*:warnings' format 'No matches for: %d'
 zstyle ':completion:*' group-name ''
 
+# Linuxbrew is not in the system PATH by default. Load its environment before
+# resolving the optional tools and plugins below; macOS Homebrew is initialized
+# by the standard shell setup.
+if [[ "$OSTYPE" == linux* && -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then
+  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv zsh)"
+fi
+
 # source local and config files
 for file in $ZDOTDIR/.zsh_{exports,aliases,functions}; do
   [ -r "$file" ] && source "$file"
@@ -245,24 +252,35 @@ for file in ~/.zshrc.local "$ZDOTDIR/.zsh_prompt" "$ZDOTDIR/.zsh_aliases"; do
 done
 
 
-if command -v pnpm &>/dev/null; then
+if [[ "$OSTYPE" == darwin* ]]; then
   export PNPM_HOME="$HOME/Library/pnpm"
-  [[ ":$PATH:" != *":$PNPM_HOME:"* ]] && export PATH="$PNPM_HOME:$PATH"
+else
+  export PNPM_HOME="$HOME/.local/share/pnpm"
 fi
+[[ -d "$PNPM_HOME/bin" && ":$PATH:" != *":$PNPM_HOME/bin:"* ]] && export PATH="$PNPM_HOME/bin:$PATH"
 
 if command -v pyenv &>/dev/null; then
   export PYENV_ROOT="$HOME/.pyenv"
   [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
   eval "$(pyenv init -)"
 fi
-source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
-source /opt/homebrew/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh
+case "$OSTYPE" in
+  darwin*) zsh_plugin_prefix=/opt/homebrew ;;
+  linux*) zsh_plugin_prefix=/home/linuxbrew/.linuxbrew ;;
+esac
 
-[[ -f "$HOME/.zshrc.local" ]] && source $HOME/.zshrc.local
+if [[ -n "${zsh_plugin_prefix:-}" ]]; then
+  for plugin in \
+    "$zsh_plugin_prefix/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" \
+    "$zsh_plugin_prefix/share/zsh-autosuggestions/zsh-autosuggestions.zsh" \
+    "$zsh_plugin_prefix/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh"; do
+    [[ -r "$plugin" ]] && source "$plugin"
+  done
+fi
+unset plugin zsh_plugin_prefix
 
 # Vite+ bin (https://viteplus.dev)
-. "$HOME/.vite-plus/env"
+[[ -r "$HOME/.vite-plus/env" ]] && source "$HOME/.vite-plus/env"
 
 # Nudge if a tool-managed config file has drifted from its repo snapshot
 # (see `dot sync` / docs/adr/0001). Throttled to every 14 days, silent when

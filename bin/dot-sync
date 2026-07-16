@@ -225,8 +225,13 @@ cmd_status() {
     # The marker is a "last checked" timestamp, refreshed on every scan below —
     # so we spawn python3 at most once per interval, not on every shell startup.
     if [ -f "$NUDGE_MARKER" ]; then
-      local age_days
-      age_days=$(( ( $(date +%s) - $(stat -f %m "$NUDGE_MARKER" 2>/dev/null || echo 0) ) / 86400 ))
+      local age_days marker_mtime
+      if [[ "$OSTYPE" == darwin* ]]; then
+        marker_mtime="$(stat -f %m "$NUDGE_MARKER" 2>/dev/null || echo 0)"
+      else
+        marker_mtime="$(stat -c %Y "$NUDGE_MARKER" 2>/dev/null || echo 0)"
+      fi
+      age_days=$(( ( $(date +%s) - marker_mtime ) / 86400 ))
       [ "$age_days" -lt "$NUDGE_INTERVAL_DAYS" ] && return 0
     fi
     if _scan_drift; then

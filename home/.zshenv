@@ -32,4 +32,12 @@ typeset -aU path
 export EDITOR='nvim'
 export GIT_EDITOR='nvim'
 
-export ZSH_HIGHLIGHT_HIGHLIGHTERS_DIR=/opt/homebrew/share/zsh-syntax-highlighting/highlighters
+case "$OSTYPE" in
+  darwin*) zsh_highlight_prefix=/opt/homebrew ;;
+  linux*) zsh_highlight_prefix=/home/linuxbrew/.linuxbrew ;;
+esac
+
+if [[ -d "${zsh_highlight_prefix:-}/share/zsh-syntax-highlighting/highlighters" ]]; then
+  export ZSH_HIGHLIGHT_HIGHLIGHTERS_DIR="$zsh_highlight_prefix/share/zsh-syntax-highlighting/highlighters"
+fi
+unset zsh_highlight_prefix
