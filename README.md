@@ -111,13 +111,19 @@ See [docs/adr/0001-tool-managed-files-sync-not-symlink.md](docs/adr/0001-tool-ma
 ./bin/dot git setup
 ```
 
-### 7. Set macOS defaults
+### 7. Install fonts
+
+Font casks are installed automatically via `brew bundle` on macOS. On Linux
+(Pop!_OS / COSMIC), Homebrew casks aren't supported — see
+[docs/fonts.md](docs/fonts.md) for manual/Nerd Fonts install instructions.
+
+### 8. Set macOS defaults
 
 ```bash
 ./bin/dot macos defaults
 ```
 
-### 8. Restore from backup (if migrating)
+### 9. Restore from backup (if migrating)
 
 ```bash
 # Copy secrets back
