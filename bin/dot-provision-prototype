@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+# Description: THROWAWAY interactive prototype for the provisioning contract
+#
+# THROWAWAY PROTOTYPE — issue pixelmord/homelab#21
+#
+# Question: Can one visible, repository-local contract provision a fresh
+# developer machine from Proton Pass while keeping the unattended runner on
+# sops+age, without a second ~/.secrets source of truth?
+
+set -Eeuo pipefail
+
+state="choose-context"
+context="not selected"
+repository="not selected"
+secret_store="not selected"
+template_source="not selected"
+output="not selected"
+
+render() {
+  printf '\033[2J\033[H'
+  printf '\033[1mProvisioning contract — throwaway prototype\033[0m\n'
+  printf '\033[2mQuestion: does one repo-local manifest make the safe path obvious?\033[0m\n\n'
+
+  printf '\033[1mCurrent state\033[0m\n'
+  printf '  %-18s %s\n' 'trust context' "$context"
+  printf '  %-18s %s\n' 'repository' "$repository"
+  printf '  %-18s %s\n' 'secret store' "$secret_store"
+  printf '  %-18s %s\n' 'template source' "$template_source"
+  printf '  %-18s %s\n\n' 'materialized output' "$output"
+
+  case "$state" in
+    choose-context)
+      cat <<'EOF'
+A fresh clone gets its provisioning instructions from that clone — never from
+an untracked ~/.secrets tree.
+
+[1] Developer workstation/repository (Proton Pass CLI)
+[2] Dotfiles checkout (Proton Pass CLI)
+[3] Unattended control-plane runner (sops + age)
+[r] Reset    [q] Quit
+EOF
+      ;;
+    developer)
+      cat <<'EOF'
+Proposed committed layout in EACH developer repository:
+
+  .secrets/
+    manifest.yaml              # public: targets, modes, owner; no secret values
+    env/.env.local.tmpl        # pass:// references only
+    ssh/config.tmpl            # pass:// references only
+
+  dot provision dev <repo>
+    1. verifies the Proton Pass CLI session;
+    2. reads <repo>/.secrets/manifest.yaml;
+    3. resolves each .tmpl through pass inject;
+    4. atomically writes only the manifest's explicit targets.
+
+This makes the fresh clone self-describing. The template lives beside the code
+that consumes it; Pass remains the only developer-machine secret store.
+
+[b] Back    [r] Reset    [q] Quit
+EOF
+      ;;
+    dotfiles)
+      cat <<'EOF'
+Proposed committed layout in the dotfiles repository:
+
+  .secrets/
+    manifest.yaml
+    home/.gitconfig.local.tmpl
+    home/.ssh/config.tmpl
+
+  dot provision dev "$DOTFILES"
+
+The manifest may target $HOME paths, but dotfiles' normal `link` command does
+NOT link secret outputs. Provisioning writes them as real, mode-restricted
+files. Existing targets require an explicit --replace confirmation in the real
+command.
+
+[b] Back    [r] Reset    [q] Quit
+EOF
+      ;;
+    runner)
+      cat <<'EOF'
+Proposed committed layout in the control-plane repository:
+
+  .sops.yaml                   # public age recipient policy
+  secrets/runner.enc.yaml      # encrypted values, keys visible
+  automation/*.tmpl            # optional public config templates
+
+  control-plane provision runner
+    1. requires SOPS_AGE_KEY_FILE on the dedicated LXC;
+    2. decrypts only the needed secret material into a 0700 runtime directory;
+    3. renders/executes the named task; then removes runtime plaintext.
+
+The agent NEVER installs or signs in to Proton Pass. Its age key has an offline
+backup and is restricted to the runner trust boundary (ADR 0002).
+
+[b] Back    [r] Reset    [q] Quit
+EOF
+      ;;
+  esac
+}
+
+while true; do
+  render
+  IFS= read -rsn1 key
+  case "$key" in
+    1)
+      state="developer"
+      context="developer machine"
+      repository="fresh application checkout"
+      secret_store="Proton Pass CLI (full-account human session)"
+      template_source="<repo>/.secrets/*.tmpl"
+      output="manifest-declared local files"
+      ;;
+    2)
+      state="dotfiles"
+      context="developer machine"
+      repository="dotfiles checkout"
+      secret_store="Proton Pass CLI (full-account human session)"
+      template_source="<repo>/.secrets/*.tmpl"
+      output="$HOME files, never symlinked"
+      ;;
+    3)
+      state="runner"
+      context="unattended agent LXC"
+      repository="control-plane checkout"
+      secret_store="sops + age (runner-only key)"
+      template_source="encrypted secrets + public task template"
+      output="ephemeral 0700 runtime directory"
+      ;;
+    b|B)
+      state="choose-context"
+      context="not selected"
+      repository="not selected"
+      secret_store="not selected"
+      template_source="not selected"
+      output="not selected"
+      ;;
+    r|R)
+      state="choose-context"
+      context="not selected"
+      repository="not selected"
+      secret_store="not selected"
+      template_source="not selected"
+      output="not selected"
+      ;;
+    q|Q) printf '\033[2J\033[H'; exit 0 ;;
+  esac
+done
