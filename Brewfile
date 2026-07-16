@@ -306,8 +306,7 @@ brew 'yt-dlp'                           # download videos from YouTube and other
 # ============================================================================
 brew 'neovim'                          # A better vim
 brew 'glow'                            # markdown viewer
-brew 'opencode'                        # OpenCode CLI tool
-brew 'mole'                            # SSH tunneling tool
+# brew 'opencode'                      # OpenCode CLI tool (opt-in; not currently used)
 # brew 'pipenv'                         # Python dependency manager
 # brew 'pipx'                           # install and run Python applications in isolated environments
 # brew 'rclone'                         # rsync for cloud storage
@@ -317,6 +316,7 @@ brew 'mole'                            # SSH tunneling tool
 
 if OS.mac?
   brew 'terminal-notifier'              # send macOS User Notifications from command line
+  brew 'mole'                           # deep-clean and optimize macOS
 
   # ============================================================================
   # VS CODE / CURSOR EXTENSIONS
