@@ -126,6 +126,7 @@ if OS.mac?
   # ============================================================================
   cask 'font-barlow'                     # Barlow font family
   cask 'font-fira-code'                  # Fira Code font
+  cask 'font-fira-code-nerd-font'        # Fira Code Nerd Font
   cask 'font-hack-nerd-font'             # Hack Nerd Font
   cask 'font-jetbrains-mono'             # JetBrains Mono font
   cask 'font-jetbrains-mono-nerd-font'   # JetBrains Mono Nerd Font
