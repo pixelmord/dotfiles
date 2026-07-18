@@ -3,6 +3,7 @@
 if OS.mac?
   tap 'FelixKratz/formulae' # For janky borders
   tap 'oven-sh/bun'        # Bun JavaScript runtime
+  tap 'protonpass/tap'     # Proton Pass CLI
 
   # macOS-specific utilities
   brew 'noti'                          # utility to display notifications from scripts
@@ -101,6 +102,7 @@ if OS.mac?
   # Email & Communication
   # cask 'proton-mail'                    # ProtonMail client
   cask 'proton-pass'                     # Proton Pass password manager
+  brew 'protonpass/tap/pass-cli'         # Proton Pass CLI
   cask 'proton-drive'                    # Proton Drive cloud storage
   cask 'lastpass'                       # password manager (consider alternatives)
 
