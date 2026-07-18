@@ -31,6 +31,7 @@ NUDGE_MARKER="${XDG_STATE_HOME:-$HOME/.local/state}/dotfiles/sync-nudge"
 registry() {
   cat <<EOF
 claude-settings|$HOME/.claude/settings.json|$DOTFILES/home/.claude/settings.json|claude
+pi-settings|$HOME/.pi/agent/settings.json|$DOTFILES/home/.pi/agent/settings.json|pi
 EOF
 }
 

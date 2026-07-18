@@ -432,6 +432,7 @@ backup_secrets() {
     ".zshrc.local"
     ".zshenv.local"
     ".config/gh"
+    ".pi/agent/auth.json"
   )
 
   for file in "${secret_files[@]}"; do

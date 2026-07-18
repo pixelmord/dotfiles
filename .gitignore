@@ -19,3 +19,8 @@ config/karabiner/automatic_backups/
 # MemPalace per-project files (issue #185)
 mempalace.yaml
 entities.json
+
+# PI agent: only the settings.json snapshot is tracked (via `dot sync`).
+# Credentials and session logs must never be committed.
+home/.pi/agent/auth.json
+home/.pi/agent/sessions/

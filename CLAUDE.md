@@ -129,7 +129,8 @@ Two distinct classes — see `CONTEXT.md` and `docs/adr/0001-*`:
 - **Owned files**: repo is source of truth, symlinked into `$HOME`. Editing means
   editing the repo (`CLAUDE.md`, zsh/git config, `agents/*`).
 - **Tool-managed files**: an app rewrites them atomically, which destroys
-  symlinks (e.g. `~/.claude/settings.json`, written by Claude Code + supacode).
+  symlinks (e.g. `~/.claude/settings.json`, written by Claude Code + supacode;
+  `~/.pi/agent/settings.json`, written by the PI agent).
   These are **not symlinked**. The repo holds a normalized snapshot reconciled
   via `dot sync` (`capture` live→repo, `seed` repo→live). Do NOT try to symlink
   them or edit the snapshot expecting it to go live — capture from the app.
@@ -171,7 +172,8 @@ Two distinct classes — see `CONTEXT.md` and `docs/adr/0001-*`:
 │   └── [other packages]/
 ├── home/
 │   ├── .zshenv                 # Bootstrap (sets XDG paths)
-│   └── .claude/                # Claude Code config + 20+ agents
+│   ├── .claude/                # Claude Code config + 20+ agents
+│   └── .pi/agent/              # PI agent settings.json snapshot (tool-managed, dot sync)
 ├── Brewfile                    # Homebrew packages (291 lines)
 ├── cursor-extensions.txt       # Cursor extensions list
 └── README.md
