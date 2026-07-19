@@ -191,7 +191,7 @@ done
 unset file
 
 # setup PATH
-for dir in $HOME/.cargo/bin $HOME/.local/bin /usr/local/opt/grep/libexec/gnubin /opt/homebrew/opt/libxml2/bin /opt/homebrew/opt/libpq/bin /usr/local/sbin /usr/local/bin $DOTFILES/bin $HOME/bin; do
+for dir in $HOME/.cargo/bin $HOME/.local/bin /usr/local/opt/grep/libexec/gnubin /opt/homebrew/opt/libxml2/bin /opt/homebrew/opt/libpq/bin /usr/local/sbin /usr/local/bin $DOTFILES/bin $HOME/bin $HOME/.local/share/pnpm; do
   prepend_path $dir
 done
 
