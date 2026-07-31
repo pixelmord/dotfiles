@@ -8,8 +8,19 @@ alias reload!="RELOAD=1 source $XDG_CONFIG_HOME/zsh/.zshrc"
 alias mv='mv -v'
 # Verbose copy
 alias cp='cp -v'
-# Use trash instead of rm
-alias rm='trash'
+# Use trash instead of rm (macOS: `trash`; Linux: trash-cli `trash-put` or `gio trash`)
+case "$OSTYPE" in
+  darwin*)
+    command -v trash &>/dev/null && alias rm='trash'
+    ;;
+  *)
+    if command -v trash-put &>/dev/null; then
+      alias rm='trash-put'
+    elif command -v gio &>/dev/null; then
+      alias rm='gio trash'
+    fi
+    ;;
+esac
 
 # Go up one directory
 alias ..='cd ..'
@@ -56,8 +67,8 @@ fi
 alias la="ls -AF ${colorflag}"
 # List directories only
 alias lld="ls -l | grep ^d"
-# Force remove
-alias rmf="rm -rf"
+# Force remove (bypass trash — use the real rm binary)
+alias rmf="command rm -rf"
 
 # Git status (short)
 alias gs='git s'
